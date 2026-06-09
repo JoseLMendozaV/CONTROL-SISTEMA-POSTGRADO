@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
+from .exports import generar_excel_organizaciones
 
 from .forms import (
     FacultadForm,
@@ -1590,11 +1591,27 @@ def importar_organizaciones_excel(request):
 
 @login_required
 def exportar_organizaciones_excel(request):
-    messages.info(
-        request,
-        "La exportación a Excel se implementará en la Parte 10."
+    """
+    Exporta a Excel las organizaciones docentes.
+    Respeta los filtros aplicados desde el listado principal.
+    """
+
+    organizaciones = queryset_organizaciones_base()
+
+    filtro_form = OrganizacionDocenteFiltroForm(request.GET or None)
+
+    organizaciones = aplicar_filtros_organizaciones(
+        organizaciones,
+        filtro_form,
+    ).order_by(
+        "-anio",
+        "semestre",
+        "facultad__nombre",
+        "programa__nombre",
+        "docente__nombre_completo",
     )
-    return redirect("organizacion_listado")
+
+    return generar_excel_organizaciones(organizaciones)
 
 
 @login_required

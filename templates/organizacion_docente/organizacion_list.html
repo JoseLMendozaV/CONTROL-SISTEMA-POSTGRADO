@@ -22,8 +22,8 @@
             Importar Excel
         </a>
 
-        <a href="{% url 'exportar_organizaciones_excel' %}"
-           class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+        <a href="{% url 'exportar_organizaciones_excel' %}{% if querystring %}?{{ querystring }}{% endif %}"
+        class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
             Exportar Excel
         </a>
     </div>

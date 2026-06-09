@@ -264,4 +264,10 @@ urlpatterns = [
         views.ajax_datos_asignatura,
         name="ajax_datos_asignatura",
     ),
+
+    path(
+    "organizaciones/exportar-excel/",
+    views.exportar_organizaciones_excel,
+    name="exportar_organizaciones_excel",
+    ),
 ]
