@@ -18,12 +18,26 @@
             Editar
         </a>
 
-        <a href="{% url 'generar_nota_docente' organizacion.pk %}" class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
-            Nota docente
+
+        <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=pdf"
+        class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+            Nota PDF
         </a>
 
-        <a href="{% url 'generar_calendario_pago' organizacion.pk %}" class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-800">
-            Calendario pago
+        <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=docx"
+        class="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700">
+            Nota Word
+        </a>
+
+
+        <a href="{% url 'generar_calendario_pago' organizacion.pk %}?formato=pdf"
+        class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-800">
+            Calendario PDF
+        </a>
+
+        <a href="{% url 'generar_calendario_pago' organizacion.pk %}?formato=docx"
+        class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-purple-700">
+            Calendario Word
         </a>
 
         <a href="{% url 'organizacion_duplicar' organizacion.pk %}" class="rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">

@@ -270,4 +270,16 @@ urlpatterns = [
     views.exportar_organizaciones_excel,
     name="exportar_organizaciones_excel",
     ),
+
+    path(
+    "organizaciones/<int:pk>/nota-docente/",
+    views.generar_nota_docente,
+    name="generar_nota_docente",
+    ),
+
+    path(
+    "organizaciones/<int:pk>/calendario-pago/",
+    views.generar_calendario_pago,
+    name="generar_calendario_pago",
+    ),
 ]

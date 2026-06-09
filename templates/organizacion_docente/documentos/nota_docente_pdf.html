@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Nota al docente</title>
+
+    <style>
+        @page {
+            size: letter;
+            margin: 2.2cm 2.2cm 2cm 2.2cm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #1e293b;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 15px;
+            margin: 0;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            font-size: 13px;
+            margin: 3px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .fecha {
+            text-align: right;
+            margin-bottom: 28px;
+        }
+
+        .destinatario {
+            margin-bottom: 20px;
+        }
+
+        .destinatario p {
+            margin: 2px 0;
+        }
+
+        .asunto {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .parrafo {
+            text-align: justify;
+            margin-bottom: 14px;
+        }
+
+        .tabla-datos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tabla-datos th {
+            width: 32%;
+            background: #0f3d5e;
+            color: white;
+            text-align: left;
+            padding: 7px;
+            border: 1px solid #cbd5e1;
+            font-size: 11px;
+        }
+
+        .tabla-datos td {
+            padding: 7px;
+            border: 1px solid #cbd5e1;
+            font-size: 11px;
+        }
+
+        .section-title {
+            background: #f1f5f9;
+            border-left: 5px solid #0f3d5e;
+            padding: 8px 10px;
+            font-weight: bold;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+
+        .firma {
+            margin-top: 55px;
+            text-align: center;
+        }
+
+        .firma-linea {
+            width: 260px;
+            border-top: 1px solid #1e293b;
+            margin: 0 auto 5px auto;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: -1.2cm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 9px;
+            color: #64748b;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Universidad Tecnológica de Panamá</h1>
+        <h2>Centro Regional de Chiriquí</h2>
+        <h2>Vicerrectoría de Investigación, Postgrado y Extensión</h2>
+    </div>
+
+    <div class="fecha">
+        David, {{ fecha_actual|date:"d" }} de {{ fecha_actual|date:"F" }} de {{ fecha_actual|date:"Y" }}
+    </div>
+
+    <div class="destinatario">
+        <p><strong>Profesor(a):</strong> {{ nombre_docente }}</p>
+        <p><strong>Cédula:</strong> {{ cedula_docente }}</p>
+    </div>
+
+    <div class="asunto">
+        Asunto: Organización docente de postgrado
+    </div>
+
+    <p class="parrafo">
+        Estimado(a) profesor(a):
+    </p>
+
+    <p class="parrafo">
+        Por este medio se le comunica que ha sido considerado(a) para participar
+        como docente en el programa de postgrado indicado a continuación, de acuerdo
+        con la organización docente correspondiente al periodo académico señalado.
+    </p>
+
+    <div class="section-title">
+        Datos de la organización docente
+    </div>
+
+    <table class="tabla-datos">
+        <tr>
+            <th>Facultad</th>
+            <td>{{ facultad }}</td>
+        </tr>
+        <tr>
+            <th>Programa</th>
+            <td>{{ programa.nombre }}</td>
+        </tr>
+        <tr>
+            <th>Asignatura</th>
+            <td>{{ asignatura.nombre }}</td>
+        </tr>
+        <tr>
+            <th>Código de asignatura</th>
+            <td>{{ codigo_asignatura|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>Código de horario</th>
+            <td>{{ codigo_horario|default:"-" }}</td>
+        </tr>
+        <tr>
+            <th>Grupo / Aula</th>
+            <td>{{ grupo_aula }}</td>
+        </tr>
+        <tr>
+            <th>Semestre</th>
+            <td>{{ semestre }}</td>
+        </tr>
+        <tr>
+            <th>Año académico</th>
+            <td>{{ anio }}</td>
+        </tr>
+        <tr>
+            <th>Total de horas</th>
+            <td>{{ total_horas }}</td>
+        </tr>
+        <tr>
+            <th>Total de créditos</th>
+            <td>{{ total_creditos }}</td>
+        </tr>
+        <tr>
+            <th>Fechas de clases</th>
+            <td>{{ fechas_clases|linebreaksbr }}</td>
+        </tr>
+        <tr>
+            <th>Horario</th>
+            <td>{{ horario|linebreaksbr }}</td>
+        </tr>
+
+        {% if observaciones %}
+            <tr>
+                <th>Observaciones</th>
+                <td>{{ observaciones|linebreaksbr }}</td>
+            </tr>
+        {% endif %}
+    </table>
+
+    <p class="parrafo">
+        Agradecemos su apoyo académico y compromiso con la formación de los
+        estudiantes de postgrado.
+    </p>
+
+    <p class="parrafo">
+        Atentamente,
+    </p>
+
+    <div class="firma">
+        <div class="firma-linea"></div>
+        <strong>Coordinación de Postgrado</strong><br>
+        Centro Regional de Chiriquí
+    </div>
+
+    <div class="footer">
+        Documento generado automáticamente por el Sistema de Control de Organización Docente de Postgrado.
+    </div>
+
+</body>
+</html>

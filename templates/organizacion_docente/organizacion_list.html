@@ -215,6 +215,10 @@
                                     <a href="{% url 'organizacion_detalle' org.pk %}" class="text-blue-700 font-bold hover:underline">Ver</a>
                                     <a href="{% url 'organizacion_editar' org.pk %}" class="text-green-700 font-bold hover:underline">Editar</a>
                                     <a href="{% url 'organizacion_duplicar' org.pk %}" class="text-indigo-700 font-bold hover:underline">Duplicar</a>
+                                    <a href="{% url 'generar_nota_docente' org.pk %}?formato=pdf" class="text-slate-700 font-bold hover:underline">PDF</a>
+                                    <a href="{% url 'generar_nota_docente' org.pk %}?formato=docx" class="text-sky-700 font-bold hover:underline">Word</a>
+                                    <a href="{% url 'generar_calendario_pago' org.pk %}?formato=pdf" class="text-indigo-700 font-bold hover:underline">Cal. PDF</a>
+                                    <a href="{% url 'generar_calendario_pago' org.pk %}?formato=docx" class="text-purple-700 font-bold hover:underline">Cal. Word</a>
                                 </div>
                             </td>
                         </tr>

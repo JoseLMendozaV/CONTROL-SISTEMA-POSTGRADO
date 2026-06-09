@@ -10,6 +10,15 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from .exports import generar_excel_organizaciones
 
+from .documents import (
+    generar_pdf_nota_docente,
+    generar_docx_nota_docente,
+    generar_pdf_calendario_pago,
+    generar_docx_calendario_pago,
+)
+
+
+
 from .forms import (
     FacultadForm,
     ProgramaPostgradoForm,
@@ -1616,34 +1625,83 @@ def exportar_organizaciones_excel(request):
 
 @login_required
 def generar_nota_docente(request, pk):
+    """
+    Genera la nota dirigida al docente.
+    Formatos disponibles:
+    - PDF:  ?formato=pdf
+    - Word: ?formato=docx
+    """
+
     organizacion = get_object_or_404(
-        OrganizacionDocente,
+        OrganizacionDocente.objects.select_related(
+            "docente",
+            "facultad",
+            "programa",
+            "asignatura",
+        ),
         pk=pk,
         activo=True,
     )
 
-    messages.info(
-        request,
-        "La generación de la nota al docente se implementará en la Parte 11."
+    formato = request.GET.get("formato", "pdf").lower()
+
+    if formato == "docx":
+        return generar_docx_nota_docente(organizacion)
+
+    return generar_pdf_nota_docente(
+        organizacion=organizacion,
+        request=request,
     )
-
-    return redirect("organizacion_detalle", pk=organizacion.pk)
-
 
 @login_required
 def generar_calendario_pago(request, pk):
+    """
+    Genera calendario de pago del docente.
+    Formatos disponibles:
+    - PDF:  ?formato=pdf
+    - Word: ?formato=docx
+
+    También permite dividir el pago:
+    - ?formato=pdf&cuotas=2
+    - ?formato=docx&cuotas=3
+    """
+
     organizacion = get_object_or_404(
-        OrganizacionDocente,
+        OrganizacionDocente.objects.select_related(
+            "docente",
+            "facultad",
+            "programa",
+            "asignatura",
+        ),
         pk=pk,
         activo=True,
     )
 
-    messages.info(
-        request,
-        "La generación del calendario de pago se implementará en la Parte 12."
-    )
+    formato = request.GET.get("formato", "pdf").lower()
+    cuotas = request.GET.get("cuotas", 1)
 
-    return redirect("organizacion_detalle", pk=organizacion.pk)
+    try:
+        cuotas = int(cuotas)
+    except (TypeError, ValueError):
+        cuotas = 1
+
+    if cuotas < 1:
+        cuotas = 1
+
+    if cuotas > 12:
+        cuotas = 12
+
+    if formato == "docx":
+        return generar_docx_calendario_pago(
+            organizacion=organizacion,
+            cuotas=cuotas,
+        )
+
+    return generar_pdf_calendario_pago(
+        organizacion=organizacion,
+        request=request,
+        cuotas=cuotas,
+    )
 
 
 # ============================================================
