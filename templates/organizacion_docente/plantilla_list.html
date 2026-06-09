@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Plantillas{% endblock %}
+{% block header %}Plantillas de documentos{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h3 class="text-2xl font-black text-slate-800">Plantillas</h3>
+        <p class="text-sm text-slate-500">Plantillas para notas, calendarios y reportes.</p>
+    </div>
+
+    <a href="{% url 'plantilla_crear' %}" class="rounded-xl bg-[#0f3d5e] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#115b83]">
+        + Nueva plantilla
+    </a>
+</div>
+
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 text-left text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Nombre</th>
+                <th class="px-4 py-3">Tipo</th>
+                <th class="px-4 py-3">Archivo</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for item in plantillas %}
+                <tr>
+                    <td class="px-4 py-3 font-bold">{{ item.nombre }}</td>
+                    <td class="px-4 py-3">{{ item.get_tipo_documento_display }}</td>
+                    <td class="px-4 py-3">{{ item.archivo|default:"-" }}</td>
+                    <td class="px-4 py-3">
+                        {% if item.activo %}
+                            <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-bold">Activo</span>
+                        {% else %}
+                            <span class="rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs font-bold">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'plantilla_editar' item.pk %}" class="font-bold text-blue-700 hover:underline">Editar</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-slate-500">No hay plantillas registradas.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

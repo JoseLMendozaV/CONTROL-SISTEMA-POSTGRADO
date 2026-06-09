@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Organizaciones docentes{% endblock %}
+{% block header %}Organizaciones docentes{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div>
+        <h3 class="text-2xl font-black text-slate-800">Listado principal</h3>
+        <p class="text-sm text-slate-500">Consulta, filtra y actualiza organizaciones docentes.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'organizacion_crear' %}"
+           class="rounded-xl bg-[#0f3d5e] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#115b83]">
+            + Nueva organización
+        </a>
+
+        <a href="{% url 'importar_organizaciones_excel' %}"
+           class="rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+            Importar Excel
+        </a>
+
+        <a href="{% url 'exportar_organizaciones_excel' %}"
+           class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+            Exportar Excel
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-6">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="xl:col-span-2">
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.q.label }}</label>
+            {{ filtro_form.q }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.anio.label }}</label>
+            {{ filtro_form.anio }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.semestre.label }}</label>
+            {{ filtro_form.semestre }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.facultad.label }}</label>
+            {{ filtro_form.facultad }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.programa.label }}</label>
+            {{ filtro_form.programa }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.docente.label }}</label>
+            {{ filtro_form.docente }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.asignatura.label }}</label>
+            {{ filtro_form.asignatura }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.estado_general.label }}</label>
+            {{ filtro_form.estado_general }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.tipo_estado.label }}</label>
+            {{ filtro_form.tipo_estado }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.situacion_estado.label }}</label>
+            {{ filtro_form.situacion_estado }}
+        </div>
+
+
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.fecha_inicio.label }}</label>
+            {{ filtro_form.fecha_inicio }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.fecha_fin.label }}</label>
+            {{ filtro_form.fecha_fin }}
+        </div>
+
+        <div class="flex items-end gap-2">
+            <button class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+                Filtrar
+            </button>
+
+            <a href="{% url 'organizacion_listado' %}"
+               class="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Limpiar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Resumen -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-xs text-slate-500">Registros filtrados</p>
+        <p class="text-2xl font-black text-slate-800">{{ total_filtrado }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-xs text-slate-500">Ingresos</p>
+        <p class="text-2xl font-black text-green-700">B/. {{ total_ingresos_filtrado|floatformat:2 }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-xs text-slate-500">Pagos docentes</p>
+        <p class="text-2xl font-black text-blue-700">B/. {{ total_pagos_filtrado|floatformat:2 }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <p class="text-xs text-slate-500">Utilidad neta</p>
+        <p class="text-2xl font-black text-slate-800">B/. {{ utilidad_neta_filtrada|floatformat:2 }}</p>
+    </div>
+</div>
+
+<form method="post" action="{% url 'organizaciones_actualizacion_masiva' %}">
+    {% csrf_token %}
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 mb-6">
+        <h4 class="font-black text-slate-800 mb-4">Actualización masiva</h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form_actualizacion_masiva.tipo_estado.label }}</label>
+                {{ form_actualizacion_masiva.tipo_estado }}
+            </div>
+
+            <div class="flex items-center gap-2 pb-3">
+                {{ form_actualizacion_masiva.completado }}
+                <label class="text-sm font-bold text-slate-700">{{ form_actualizacion_masiva.completado.label }}</label>
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form_actualizacion_masiva.observacion.label }}</label>
+                {{ form_actualizacion_masiva.observacion }}
+            </div>
+
+            <button class="rounded-xl bg-indigo-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-800">
+                Aplicar a seleccionados
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">
+                            <input type="checkbox" onclick="document.querySelectorAll('.check-org').forEach(c => c.checked = this.checked)">
+                        </th>
+                        <th class="px-4 py-3">No. Pago</th>
+                        <th class="px-4 py-3">Docente</th>
+                        <th class="px-4 py-3">Facultad</th>
+                        <th class="px-4 py-3">Programa</th>
+                        <th class="px-4 py-3">Asignatura</th>
+                        <th class="px-4 py-3">Grupo</th>
+                        <th class="px-4 py-3">Horas</th>
+                        <th class="px-4 py-3">Est.</th>
+                        <th class="px-4 py-3">Pago</th>
+                        <th class="px-4 py-3">Utilidad</th>
+                        <th class="px-4 py-3">Estado</th>
+                        <th class="px-4 py-3">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for org in organizaciones %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3">
+                                <input type="checkbox" name="seleccionados" value="{{ org.pk }}" class="check-org rounded border-slate-300">
+                            </td>
+                            <td class="px-4 py-3 font-bold">{{ org.numero_pago|default:"-" }}</td>
+                            <td class="px-4 py-3">
+                                <p class="font-bold text-slate-800">{{ org.docente.nombre_completo }}</p>
+                                <p class="text-xs text-slate-500">{{ org.cedula_docente }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ org.facultad.siglas|default:org.facultad.nombre }}</td>
+                            <td class="px-4 py-3 max-w-xs">{{ org.programa.nombre }}</td>
+                            <td class="px-4 py-3">
+                                <p class="font-bold">{{ org.asignatura.nombre }}</p>
+                                <p class="text-xs text-slate-500">{{ org.codigo_asignatura|default:"-" }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ org.grupo_aula }}</td>
+                            <td class="px-4 py-3">{{ org.total_horas }}</td>
+                            <td class="px-4 py-3">{{ org.cantidad_estudiantes_matriculados }}</td>
+                            <td class="px-4 py-3">B/. {{ org.pago_docente|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-bold">B/. {{ org.utilidad_neta|floatformat:2 }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full border px-3 py-1 text-xs font-bold {{ org.estado_general_color }}">
+                                    {{ org.estado_general_texto }}
+                                </span>
+                                <p class="text-xs text-slate-400 mt-1">{{ org.porcentaje_avance }}%</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="{% url 'organizacion_detalle' org.pk %}" class="text-blue-700 font-bold hover:underline">Ver</a>
+                                    <a href="{% url 'organizacion_editar' org.pk %}" class="text-green-700 font-bold hover:underline">Editar</a>
+                                    <a href="{% url 'organizacion_duplicar' org.pk %}" class="text-indigo-700 font-bold hover:underline">Duplicar</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="13" class="px-4 py-10 text-center text-slate-500">
+                                No hay organizaciones docentes con esos filtros.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
+
+{% if page_obj.has_other_pages %}
+    <div class="mt-6 flex items-center justify-center gap-2">
+        {% if page_obj.has_previous %}
+            <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"
+            class="rounded-xl bg-white border px-4 py-2 font-bold text-slate-700">
+                Anterior
+            </a>
+        {% endif %}
+
+        <span class="rounded-xl bg-[#0f3d5e] px-4 py-2 font-bold text-white">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}"
+            class="rounded-xl bg-white border px-4 py-2 font-bold text-slate-700">
+                Siguiente
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+
+{% endblock %}

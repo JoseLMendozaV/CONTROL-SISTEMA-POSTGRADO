@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+{% block header %}{{ titulo }}{% endblock %}
+
+{% block content %}
+
+<div class="max-w-2xl bg-white rounded-3xl border border-red-200 shadow-sm p-8">
+    <div class="w-16 h-16 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center text-3xl font-black mb-5">
+        !
+    </div>
+
+    <h3 class="text-2xl font-black text-slate-800 mb-2">
+        Confirmar eliminación
+    </h3>
+
+    <p class="text-slate-600 mb-6">
+        Esta acción marcará el registro como inactivo para conservar trazabilidad.
+    </p>
+
+    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 mb-6">
+        {% if organizacion %}
+            <p class="font-bold text-slate-800">{{ organizacion }}</p>
+            <p class="text-sm text-slate-500">{{ organizacion.docente.nombre_completo }} · {{ organizacion.asignatura.nombre }}</p>
+        {% else %}
+            <p class="font-bold text-slate-800">{{ objeto }}</p>
+        {% endif %}
+    </div>
+
+    <form method="post" class="flex items-center justify-end gap-3">
+        {% csrf_token %}
+
+        {% if organizacion %}
+            <a href="{% url 'organizacion_detalle' organizacion.pk %}"
+               class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Cancelar
+            </a>
+        {% elif cancelar_url %}
+            <a href="{% url cancelar_url %}"
+               class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Cancelar
+            </a>
+        {% else %}
+            <a href="javascript:history.back()"
+               class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Cancelar
+            </a>
+        {% endif %}
+
+        <button class="rounded-xl bg-red-600 px-6 py-3 text-sm font-bold text-white hover:bg-red-700 shadow">
+            Sí, eliminar
+        </button>
+    </form>
+</div>
+
+{% endblock %}

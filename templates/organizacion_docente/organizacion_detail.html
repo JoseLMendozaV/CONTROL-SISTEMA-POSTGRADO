@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de organización{% endblock %}
+{% block header %}Detalle de organización docente{% endblock %}
+
+{% block content %}
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div>
+        <h3 class="text-2xl font-black text-slate-800">{{ organizacion.asignatura.nombre }}</h3>
+        <p class="text-sm text-slate-500">
+            {{ organizacion.docente.nombre_completo }} · {{ organizacion.get_semestre_display }} {{ organizacion.anio }}
+        </p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'organizacion_editar' organizacion.pk %}" class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+            Editar
+        </a>
+
+        <a href="{% url 'generar_nota_docente' organizacion.pk %}" class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+            Nota docente
+        </a>
+
+        <a href="{% url 'generar_calendario_pago' organizacion.pk %}" class="rounded-xl bg-indigo-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-800">
+            Calendario pago
+        </a>
+
+        <a href="{% url 'organizacion_duplicar' organizacion.pk %}" class="rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+            Duplicar
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+    <div class="bg-white rounded-3xl border p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Estado general</p>
+        <span class="inline-flex mt-3 rounded-full border px-3 py-1 text-sm font-bold {{ organizacion.estado_general_color }}">
+            {{ organizacion.estado_general_texto }}
+        </span>
+    </div>
+
+    <div class="bg-white rounded-3xl border p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Avance</p>
+        <h3 class="text-3xl font-black text-slate-800 mt-2">{{ organizacion.porcentaje_avance }}%</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Pago docente</p>
+        <h3 class="text-3xl font-black text-blue-700 mt-2">B/. {{ organizacion.pago_docente|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Utilidad neta</p>
+        <h3 class="text-3xl font-black text-green-700 mt-2">B/. {{ organizacion.utilidad_neta|floatformat:2 }}</h3>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <div class="xl:col-span-2 space-y-6">
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Información general</h4>
+
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <dt class="text-slate-500">Número de pago</dt>
+                    <dd class="font-bold">{{ organizacion.numero_pago|default:"-" }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Año / Semestre</dt>
+                    <dd class="font-bold">{{ organizacion.anio }} · {{ organizacion.get_semestre_display }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Facultad</dt>
+                    <dd class="font-bold">{{ organizacion.facultad }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Programa</dt>
+                    <dd class="font-bold">{{ organizacion.programa.nombre }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Grupo / Aula</dt>
+                    <dd class="font-bold">{{ organizacion.grupo_aula }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Fecha de matrícula</dt>
+                    <dd class="font-bold">{{ organizacion.fecha_matricula|date:"d/m/Y"|default:"-" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Docente y asignatura</h4>
+
+            <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <dt class="text-slate-500">Docente</dt>
+                    <dd class="font-bold">{{ organizacion.docente.nombre_completo }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Cédula</dt>
+                    <dd class="font-bold">{{ organizacion.cedula_docente }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Asignatura</dt>
+                    <dd class="font-bold">{{ organizacion.asignatura.nombre }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Código de asignatura</dt>
+                    <dd class="font-bold">{{ organizacion.codigo_asignatura|default:"-" }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Código de horario</dt>
+                    <dd class="font-bold">{{ organizacion.codigo_horario|default:"-" }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Total de horas</dt>
+                    <dd class="font-bold">{{ organizacion.total_horas }}</dd>
+                </div>
+            </dl>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-sm font-bold text-slate-500">Fechas de clases</p>
+                    <p class="mt-2 text-sm text-slate-700 whitespace-pre-line">{{ organizacion.fechas_clases|default:"-" }}</p>
+                </div>
+
+                <div class="rounded-2xl bg-slate-50 p-4">
+                    <p class="text-sm font-bold text-slate-500">Horario</p>
+                    <p class="mt-2 text-sm text-slate-700 whitespace-pre-line">{{ organizacion.horario|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Matrícula y finanzas</h4>
+
+            <dl class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <dt class="text-slate-500">Estudiantes matriculados</dt>
+                    <dd class="font-bold">{{ organizacion.cantidad_estudiantes_matriculados }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">No exonerados</dt>
+                    <dd class="font-bold">{{ organizacion.total_no_exonerados }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Exonerados 50%</dt>
+                    <dd class="font-bold">{{ organizacion.cantidad_exoneracion_50 }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Exonerados 25%</dt>
+                    <dd class="font-bold">{{ organizacion.cantidad_exoneracion_25 }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Total ingresos</dt>
+                    <dd class="font-bold">B/. {{ organizacion.total_ingresos|floatformat:2 }}</dd>
+                </div>
+
+                <div>
+                    <dt class="text-slate-500">Ingreso laboratorio</dt>
+                    <dd class="font-bold">B/. {{ organizacion.ingreso_laboratorio|floatformat:2 }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Observaciones</h4>
+            <p class="text-sm text-slate-700 whitespace-pre-line">{{ organizacion.observaciones|default:"Sin observaciones." }}</p>
+        </div>
+
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Control administrativo</h4>
+
+            <div class="space-y-4">
+                {% for estado in estados %}
+                    <div class="rounded-2xl border border-slate-200 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-bold text-slate-800">{{ estado.get_tipo_estado_display }}</p>
+                                <p class="text-xs text-slate-500">
+                                    {% if estado.completado %}
+                                        {{ estado.fecha_completado|date:"d/m/Y H:i" }} · {{ estado.usuario_completo|default:"-" }}
+                                    {% else %}
+                                        Pendiente
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            {% if estado.completado %}
+                                <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-bold">
+                                    Completado
+                                </span>
+                            {% else %}
+                                <span class="rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-bold">
+                                    Pendiente
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        {% if estado.observacion %}
+                            <p class="text-xs text-slate-600 mt-2">{{ estado.observacion }}</p>
+                        {% endif %}
+
+                        <form method="post" action="{% url 'organizacion_marcar_estado' organizacion.pk estado.tipo_estado %}" class="mt-3">
+                            {% csrf_token %}
+
+                            {% if estado.completado %}
+                                <input type="hidden" name="accion" value="pendiente">
+                                <button class="w-full rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200">
+                                    Marcar pendiente
+                                </button>
+                            {% else %}
+                                <input type="hidden" name="accion" value="completar">
+                                <button class="w-full rounded-xl bg-green-600 px-3 py-2 text-xs font-bold text-white hover:bg-green-700">
+                                    Marcar completado
+                                </button>
+                            {% endif %}
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-red-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-red-700 mb-2">Zona de eliminación</h4>
+            <p class="text-sm text-slate-500 mb-4">La eliminación será lógica para conservar trazabilidad.</p>
+
+            <a href="{% url 'organizacion_eliminar' organizacion.pk %}" class="block text-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700">
+                Eliminar organización
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

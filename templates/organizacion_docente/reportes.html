@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes{% endblock %}
+{% block header %}Reportes{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <p class="text-sm text-slate-500">Total de ingresos</p>
+        <h3 class="text-3xl font-black text-green-700 mt-2">B/. {{ total_ingresos|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <p class="text-sm text-slate-500">Pagos docentes</p>
+        <h3 class="text-3xl font-black text-blue-700 mt-2">B/. {{ total_pagos|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <p class="text-sm text-slate-500">Utilidad neta</p>
+        <h3 class="text-3xl font-black text-slate-800 mt-2">B/. {{ utilidad_neta|floatformat:2 }}</h3>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h3 class="text-lg font-black text-slate-800">Resumen por facultad</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Facultad</th>
+                        <th class="px-4 py-3">Total</th>
+                        <th class="px-4 py-3">Ingresos</th>
+                        <th class="px-4 py-3">Pagos</th>
+                        <th class="px-4 py-3">Utilidad</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in por_facultad %}
+                        <tr>
+                            <td class="px-4 py-3 font-bold">{{ item.facultad__siglas|default:item.facultad__nombre }}</td>
+                            <td class="px-4 py-3">{{ item.total }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-bold">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">No hay datos.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h3 class="text-lg font-black text-slate-800">Resumen por programa</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Programa</th>
+                        <th class="px-4 py-3">Total</th>
+                        <th class="px-4 py-3">Ingresos</th>
+                        <th class="px-4 py-3">Pagos</th>
+                        <th class="px-4 py-3">Utilidad</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in por_programa %}
+                        <tr>
+                            <td class="px-4 py-3 font-bold">{{ item.programa__nombre }}</td>
+                            <td class="px-4 py-3">{{ item.total }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-bold">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">No hay datos.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Asignaturas{% endblock %}
+{% block header %}Asignaturas{% endblock %}
+
+{% block content %}
+
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h3 class="text-2xl font-black text-slate-800">Asignaturas</h3>
+        <p class="text-sm text-slate-500">Gestión de asignaturas por programa.</p>
+    </div>
+
+    <a href="{% url 'asignatura_crear' %}" class="rounded-xl bg-[#0f3d5e] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#115b83]">
+        + Nueva asignatura
+    </a>
+</div>
+
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 mb-6">
+    <form method="get" class="flex gap-3">
+        <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Buscar asignatura..."
+               class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-200">
+        <button class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white">Buscar</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="min-w-full text-sm">
+        <thead class="bg-slate-50 text-left text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Código</th>
+                <th class="px-4 py-3">Asignatura</th>
+                <th class="px-4 py-3">Programa</th>
+                <th class="px-4 py-3">Horas</th>
+                <th class="px-4 py-3">Créditos</th>
+                <th class="px-4 py-3">Estado</th>
+                <th class="px-4 py-3">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {% for item in asignaturas %}
+                <tr>
+                    <td class="px-4 py-3 font-bold">{{ item.codigo_asignatura }}</td>
+                    <td class="px-4 py-3">{{ item.nombre }}</td>
+                    <td class="px-4 py-3">{{ item.programa.nombre }}</td>
+                    <td class="px-4 py-3">{{ item.total_horas }}</td>
+                    <td class="px-4 py-3">{{ item.total_creditos }}</td>
+                    <td class="px-4 py-3">
+                        {% if item.activo %}
+                            <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-bold">Activo</span>
+                        {% else %}
+                            <span class="rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs font-bold">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <a href="{% url 'asignatura_editar' item.pk %}" class="font-bold text-blue-700 hover:underline">Editar</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="px-4 py-8 text-center text-slate-500">No hay asignaturas registradas.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Excel{% endblock %}
+{% block header %}Importar organizaciones desde Excel{% endblock %}
+
+{% block content %}
+
+<div class="max-w-3xl bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+    <h3 class="text-xl font-black text-slate-800 mb-2">Importar archivo Excel</h3>
+    <p class="text-sm text-slate-500 mb-6">
+        Esta vista quedará conectada en la parte de importación. Por ahora valida el archivo .xlsx.
+    </p>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div>
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="flex items-center gap-3">
+                        {{ field }}
+                        <label class="text-sm font-bold text-slate-700">{{ field.label }}</label>
+                    </div>
+                {% else %}
+                    <label class="block text-sm font-bold text-slate-700 mb-1">{{ field.label }}</label>
+                    {{ field }}
+                {% endif %}
+
+                {% if field.help_text %}
+                    <p class="text-xs text-slate-400 mt-1">{{ field.help_text }}</p>
+                {% endif %}
+
+                {% if field.errors %}
+                    <p class="text-xs text-red-600 font-bold mt-1">{{ field.errors }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <a href="{% url 'organizacion_listado' %}" class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Cancelar
+            </a>
+
+            <button class="rounded-xl bg-green-700 px-6 py-3 text-sm font-bold text-white hover:bg-green-800">
+                Importar
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

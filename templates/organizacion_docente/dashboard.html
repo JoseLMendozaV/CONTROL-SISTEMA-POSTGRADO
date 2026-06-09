@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Organización Docente{% endblock %}
+{% block header %}Dashboard principal{% endblock %}
+
+{% block content %}
+
+<!-- Encabezado del dashboard -->
+<div class="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <div>
+        <h3 class="text-3xl font-black text-slate-800">
+            Panel ejecutivo de postgrado
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Resumen actualizado al {{ fecha_actual|date:"d/m/Y H:i" }}.
+        </p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'organizacion_crear' %}"
+           class="rounded-xl bg-[#0f3d5e] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#115b83] shadow">
+            + Nueva organización
+        </a>
+
+        <a href="{% url 'organizacion_listado' %}"
+           class="rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+            Ver listado
+        </a>
+
+        <a href="{% url 'reportes' %}"
+           class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+            Reportes
+        </a>
+    </div>
+</div>
+
+<!-- Indicadores principales -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+
+    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-blue-50"></div>
+        <p class="relative text-sm font-bold text-slate-500">Organizaciones activas</p>
+        <h3 class="relative text-4xl font-black text-slate-800 mt-2">
+            {{ total_organizaciones }}
+        </h3>
+        <p class="relative text-xs text-slate-400 mt-2">
+            Registros activos en el sistema
+        </p>
+    </div>
+
+    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-green-50"></div>
+        <p class="relative text-sm font-bold text-slate-500">Total de ingresos</p>
+        <h3 class="relative text-3xl font-black text-green-700 mt-2">
+            B/. {{ total_ingresos|floatformat:2 }}
+        </h3>
+        <p class="relative text-xs text-slate-400 mt-2">
+            Ingresos registrados
+        </p>
+    </div>
+
+    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-indigo-50"></div>
+        <p class="relative text-sm font-bold text-slate-500">Pagos docentes</p>
+        <h3 class="relative text-3xl font-black text-blue-700 mt-2">
+            B/. {{ total_pagos|floatformat:2 }}
+        </h3>
+        <p class="relative text-xs text-slate-400 mt-2">
+            Total comprometido en pagos
+        </p>
+    </div>
+
+    <div class="relative overflow-hidden bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-emerald-50"></div>
+        <p class="relative text-sm font-bold text-slate-500">Utilidad neta general</p>
+        <h3 class="relative text-3xl font-black {% if utilidad_neta < 0 %}text-red-700{% else %}text-emerald-700{% endif %} mt-2">
+            B/. {{ utilidad_neta|floatformat:2 }}
+        </h3>
+        <p class="relative text-xs text-slate-400 mt-2">
+            Ingresos menos pagos docentes
+        </p>
+    </div>
+
+</div>
+
+<!-- Pendientes clave -->
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5">
+    {% for item in pendientes_clave %}
+        <div class="rounded-3xl border {{ item.borde }} {{ item.fondo }} p-5 shadow-sm">
+            <p class="text-sm font-bold text-slate-500">{{ item.titulo }}</p>
+            <h3 class="text-4xl font-black {{ item.color }} mt-2">
+                {{ item.total }}
+            </h3>
+            <p class="text-xs text-slate-500 mt-2">
+                {{ item.descripcion }}
+            </p>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Estado general y resumen por año/semestre -->
+<div class="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+    <!-- Estados generales -->
+    <div class="xl:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h4 class="text-lg font-black text-slate-800">Estado general del proceso</h4>
+                <p class="text-sm text-slate-500">Distribución de organizaciones por avance administrativo.</p>
+            </div>
+        </div>
+
+        <div class="space-y-5">
+            {% for item in resumen_estados %}
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="h-3 w-3 rounded-full {{ item.clase }}"></span>
+                            <span class="text-sm font-bold text-slate-700">{{ item.nombre }}</span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <span class="rounded-full px-3 py-1 text-xs font-black {{ item.badge }}">
+                                {{ item.total }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-500">
+                                {{ item.porcentaje }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full {{ item.clase }}"
+                             style="width: {{ item.porcentaje }}%;">
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Resumen año / semestre -->
+    <div class="space-y-6">
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Por año</h4>
+
+            <div class="space-y-4">
+                {% for item in total_por_anio %}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-bold text-slate-700">{{ item.anio }}</span>
+                            <span class="text-xs font-black text-blue-700">{{ item.total }}</span>
+                        </div>
+
+                        <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full bg-blue-600"
+                                 style="width: {{ item.porcentaje }}%;">
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-slate-500">No hay datos por año.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h4 class="text-lg font-black text-slate-800 mb-4">Por semestre</h4>
+
+            <div class="space-y-4">
+                {% for item in total_por_semestre %}
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-bold text-slate-700">{{ item.semestre }}</span>
+                            <span class="text-xs font-black text-green-700">{{ item.total }}</span>
+                        </div>
+
+                        <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full bg-green-600"
+                                 style="width: {{ item.porcentaje }}%;">
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-sm text-slate-500">No hay datos por semestre.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Facultad y programas -->
+<div class="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+    <!-- Por facultad -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h4 class="text-lg font-black text-slate-800">Organizaciones por facultad</h4>
+            <p class="text-sm text-slate-500">Resumen académico y financiero por facultad.</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Facultad</th>
+                        <th class="px-4 py-3">Total</th>
+                        <th class="px-4 py-3">Ingresos</th>
+                        <th class="px-4 py-3">Pagos</th>
+                        <th class="px-4 py-3">Utilidad</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in total_por_facultad %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3">
+                                <p class="font-black text-slate-800">
+                                    {{ item.facultad__siglas|default:"-" }}
+                                </p>
+                                <p class="text-xs text-slate-500 max-w-xs">
+                                    {{ item.facultad__nombre }}
+                                </p>
+                                <div class="mt-2 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full bg-[#0f3d5e]"
+                                         style="width: {{ item.porcentaje }}%;">
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="px-4 py-3 font-black">
+                                {{ item.total }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                B/. {{ item.total_ingresos|floatformat:2 }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                B/. {{ item.total_pagos|floatformat:2 }}
+                            </td>
+
+                            <td class="px-4 py-3 font-black {% if item.utilidad_neta < 0 %}text-red-700{% else %}text-green-700{% endif %}">
+                                B/. {{ item.utilidad_neta|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-10 text-center text-slate-500">
+                                No hay organizaciones por facultad.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Top programas -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h4 class="text-lg font-black text-slate-800">Top programas por utilidad neta</h4>
+            <p class="text-sm text-slate-500">Programas con mayor resultado financiero.</p>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for item in top_programas_utilidad %}
+                <div class="p-5 hover:bg-slate-50">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="font-black text-slate-800">
+                                {{ item.programa__nombre }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                {{ item.facultad__siglas|default:"-" }} · {{ item.total }} organización(es)
+                            </p>
+                        </div>
+
+                        <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-800">
+                            B/. {{ item.utilidad_neta|floatformat:2 }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-4">
+                        <div class="rounded-2xl bg-slate-50 p-3">
+                            <p class="text-xs text-slate-500">Ingresos</p>
+                            <p class="font-black text-slate-800">B/. {{ item.total_ingresos|floatformat:2 }}</p>
+                        </div>
+
+                        <div class="rounded-2xl bg-slate-50 p-3">
+                            <p class="text-xs text-slate-500">Pagos</p>
+                            <p class="font-black text-slate-800">B/. {{ item.total_pagos|floatformat:2 }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="p-10 text-center text-slate-500">
+                    No hay datos de programas.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Últimas organizaciones -->
+<div class="mt-8 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div>
+            <h4 class="text-lg font-black text-slate-800">
+                Últimas organizaciones registradas
+            </h4>
+            <p class="text-sm text-slate-500">
+                Registros recientes del sistema.
+            </p>
+        </div>
+
+        <a href="{% url 'organizacion_listado' %}"
+           class="text-sm font-black text-blue-700 hover:underline">
+            Ver todas
+        </a>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-slate-50 text-left text-slate-500">
+                <tr>
+                    <th class="px-4 py-3">Año</th>
+                    <th class="px-4 py-3">Semestre</th>
+                    <th class="px-4 py-3">Docente</th>
+                    <th class="px-4 py-3">Asignatura</th>
+                    <th class="px-4 py-3">Programa</th>
+                    <th class="px-4 py-3">Avance</th>
+                    <th class="px-4 py-3">Estado</th>
+                    <th class="px-4 py-3">Acción</th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-slate-100">
+                {% for org in ultimas_organizaciones %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 font-black">{{ org.anio }}</td>
+
+                        <td class="px-4 py-3">
+                            {{ org.get_semestre_display }}
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <p class="font-black text-slate-800">
+                                {{ org.docente.nombre_completo }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                {{ org.cedula_docente|default:"-" }}
+                            </p>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <p class="font-bold text-slate-800">
+                                {{ org.asignatura.nombre }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                {{ org.codigo_asignatura|default:"-" }}
+                            </p>
+                        </td>
+
+                        <td class="px-4 py-3 max-w-sm">
+                            {{ org.programa.nombre }}
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 w-24 rounded-full bg-slate-100 overflow-hidden">
+                                    <div class="h-full rounded-full bg-blue-600"
+                                         style="width: {{ org.porcentaje_avance }}%;">
+                                    </div>
+                                </div>
+                                <span class="text-xs font-black text-slate-500">
+                                    {{ org.porcentaje_avance }}%
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <span class="inline-flex rounded-full border px-3 py-1 text-xs font-black {{ org.estado_general_color }}">
+                                {{ org.estado_general_texto }}
+                            </span>
+                        </td>
+
+                        <td class="px-4 py-3">
+                            <a href="{% url 'organizacion_detalle' org.pk %}"
+                               class="font-black text-blue-700 hover:underline">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-4 py-10 text-center text-slate-500">
+                            No hay organizaciones docentes registradas.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

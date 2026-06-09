@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+{% block header %}{{ titulo }}{% endblock %}
+
+{% block content %}
+
+<form method="post" class="space-y-6">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="rounded-2xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm font-bold">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Información general</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.numero_pago.label }}</label>
+                {{ form.numero_pago }}
+                {{ form.numero_pago.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.anio.label }}</label>
+                {{ form.anio }}
+                {{ form.anio.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.semestre.label }}</label>
+                {{ form.semestre }}
+                {{ form.semestre.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.facultad.label }}</label>
+                {{ form.facultad }}
+                {{ form.facultad.errors }}
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="text-sm font-bold text-slate-700">{{ form.programa.label }}</label>
+                {{ form.programa }}
+                {{ form.programa.errors }}
+            </div>
+
+            <div class="flex items-center gap-2">
+                {{ form.activo }}
+                <label class="text-sm font-bold text-slate-700">{{ form.activo.label }}</label>
+                {{ form.activo.errors }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Información del docente</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.docente.label }}</label>
+                {{ form.docente }}
+                {{ form.docente.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.cedula_docente_display.label }}</label>
+                {{ form.cedula_docente_display }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Información académica</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-3">
+                <label class="text-sm font-bold text-slate-700">{{ form.asignatura.label }}</label>
+                {{ form.asignatura }}
+                {{ form.asignatura.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.codigo_asignatura_display.label }}</label>
+                {{ form.codigo_asignatura_display }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.codigo_horario_display.label }}</label>
+                {{ form.codigo_horario_display }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.grupo_aula.label }}</label>
+                {{ form.grupo_aula }}
+                {{ form.grupo_aula.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.total_horas.label }}</label>
+                {{ form.total_horas }}
+                {{ form.total_horas.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.total_creditos.label }}</label>
+                {{ form.total_creditos }}
+                {{ form.total_creditos.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.total_laboratorio.label }}</label>
+                {{ form.total_laboratorio }}
+                {{ form.total_laboratorio.errors }}
+            </div>
+
+            <div class="md:col-span-3">
+                <label class="text-sm font-bold text-slate-700">{{ form.fechas_clases.label }}</label>
+                {{ form.fechas_clases }}
+                {{ form.fechas_clases.errors }}
+            </div>
+
+            <div class="md:col-span-3">
+                <label class="text-sm font-bold text-slate-700">{{ form.horario.label }}</label>
+                {{ form.horario }}
+                {{ form.horario.errors }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Información de matrícula</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.fecha_matricula.label }}</label>
+                {{ form.fecha_matricula }}
+                {{ form.fecha_matricula.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.cantidad_estudiantes_matriculados.label }}</label>
+                {{ form.cantidad_estudiantes_matriculados }}
+                {{ form.cantidad_estudiantes_matriculados.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.total_no_exonerados.label }}</label>
+                {{ form.total_no_exonerados }}
+                {{ form.total_no_exonerados.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.cantidad_exoneracion_50.label }}</label>
+                {{ form.cantidad_exoneracion_50 }}
+                {{ form.cantidad_exoneracion_50.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.cantidad_exoneracion_25.label }}</label>
+                {{ form.cantidad_exoneracion_25 }}
+                {{ form.cantidad_exoneracion_25.errors }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Información financiera</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.ingreso_laboratorio.label }}</label>
+                {{ form.ingreso_laboratorio }}
+                {{ form.ingreso_laboratorio.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.total_ingresos.label }}</label>
+                {{ form.total_ingresos }}
+                {{ form.total_ingresos.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.pago_docente.label }}</label>
+                {{ form.pago_docente }}
+                {{ form.pago_docente.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">{{ form.utilidad_neta_display.label }}</label>
+                {{ form.utilidad_neta_display }}
+            </div>
+        </div>
+    </div>
+
+    {% if formset %}
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-lg font-black text-slate-800 mb-5">Control administrativo</h3>
+
+            {{ formset.management_form }}
+
+            <div class="space-y-4">
+                {% for estado_form in formset %}
+                    <div class="rounded-2xl border border-slate-200 p-4">
+                        {{ estado_form.id }}
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">{{ estado_form.tipo_estado.label }}</label>
+                                {{ estado_form.tipo_estado }}
+                            </div>
+
+                            <div class="flex items-center gap-2 pt-8">
+                                {{ estado_form.completado }}
+                                <label class="text-sm font-bold text-slate-700">{{ estado_form.completado.label }}</label>
+                            </div>
+
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">{{ estado_form.fecha_completado.label }}</label>
+                                {{ estado_form.fecha_completado }}
+                            </div>
+
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">{{ estado_form.observacion.label }}</label>
+                                {{ estado_form.observacion }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-lg font-black text-slate-800 mb-5">Observaciones</h3>
+
+        {{ form.observaciones }}
+        {{ form.observaciones.errors }}
+    </div>
+
+    <div class="flex items-center justify-end gap-3">
+        <a href="{% url 'organizacion_listado' %}"
+           class="rounded-xl bg-slate-100 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-200">
+            Cancelar
+        </a>
+
+        <button class="rounded-xl bg-[#0f3d5e] px-6 py-3 text-sm font-bold text-white hover:bg-[#115b83] shadow">
+            Guardar organización
+        </button>
+    </div>
+
+</form>
+
+{% endblock %}
