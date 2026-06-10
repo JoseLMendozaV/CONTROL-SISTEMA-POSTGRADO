@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte general</title>
+
+    <style>
+        @page {
+            size: letter landscape;
+            margin: 1.4cm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            color: #1e293b;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
+        .header h2 {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .fecha {
+            text-align: right;
+            margin-bottom: 12px;
+            color: #475569;
+        }
+
+        .cards {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .card-title {
+            color: #64748b;
+            font-size: 9px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .card-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0f3d5e;
+            margin-top: 4px;
+        }
+
+        .section-title {
+            background: #0f3d5e;
+            color: white;
+            padding: 7px;
+            font-weight: bold;
+            margin-top: 14px;
+            margin-bottom: 6px;
+        }
+
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+        }
+
+        table.data th {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 6px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table.data td {
+            border: 1px solid #cbd5e1;
+            padding: 6px;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: -0.7cm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 8px;
+            color: #64748b;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>Reporte general de organización docente</h1>
+        <h2>Postgrado - Centro Regional de Chiriquí</h2>
+    </div>
+
+    <div class="fecha">
+        Generado el {{ fecha_generacion|date:"d/m/Y H:i" }}
+    </div>
+
+    <table class="cards">
+        <tr>
+            <td class="card">
+                <div class="card-title">Organizaciones</div>
+                <div class="card-value">{{ total_organizaciones }}</div>
+            </td>
+
+            <td class="card">
+                <div class="card-title">Total ingresos</div>
+                <div class="card-value">B/. {{ total_ingresos|floatformat:2 }}</div>
+            </td>
+
+            <td class="card">
+                <div class="card-title">Pagos docentes</div>
+                <div class="card-value">B/. {{ total_pagos|floatformat:2 }}</div>
+            </td>
+
+            <td class="card">
+                <div class="card-title">Utilidad neta</div>
+                <div class="card-value">B/. {{ utilidad_neta|floatformat:2 }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">Pendientes administrativos</div>
+
+    <table class="data">
+        <tr>
+            <th>Pendientes VIPE</th>
+            <th>Enviadas VIPE</th>
+            <th>Pendientes firma</th>
+            <th>Firmadas autoridades</th>
+            <th>Pendientes RH</th>
+            <th>Enviadas RH</th>
+            <th>Actas pendientes</th>
+            <th>Calendarios pendientes</th>
+        </tr>
+
+        <tr>
+            <td>{{ pendientes_vipe }}</td>
+            <td>{{ enviadas_vipe }}</td>
+            <td>{{ pendientes_firma }}</td>
+            <td>{{ firmadas_autoridades }}</td>
+            <td>{{ pendientes_rh }}</td>
+            <td>{{ enviadas_rh }}</td>
+            <td>{{ actas_pendientes }}</td>
+            <td>{{ calendarios_pendientes }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Resumen por facultad</div>
+
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Facultad</th>
+                <th>Total</th>
+                <th>Ingresos</th>
+                <th>Pagos</th>
+                <th>Utilidad</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in por_facultad %}
+                <tr>
+                    <td>{{ item.facultad__siglas|default:item.facultad__nombre }}</td>
+                    <td>{{ item.total }}</td>
+                    <td class="text-right">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
+                    <td class="text-right">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                    <td class="text-right">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No hay datos.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="section-title">Resumen por programa</div>
+
+    <table class="data">
+        <thead>
+            <tr>
+                <th>Facultad</th>
+                <th>Programa</th>
+                <th>Total</th>
+                <th>Ingresos</th>
+                <th>Pagos</th>
+                <th>Utilidad</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in por_programa %}
+                <tr>
+                    <td>{{ item.facultad__siglas|default:"-" }}</td>
+                    <td>{{ item.programa__nombre }}</td>
+                    <td>{{ item.total }}</td>
+                    <td class="text-right">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
+                    <td class="text-right">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                    <td class="text-right">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No hay datos.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Documento generado automáticamente por el Sistema de Control de Organización Docente de Postgrado.
+    </div>
+
+</body>
+</html>

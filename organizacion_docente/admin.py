@@ -391,10 +391,18 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Información de matrícula",
+            "Información de matrícula y calendario de pago",
             {
                 "fields": (
                     "fecha_matricula",
+
+                    "fecha_matricula_texto",
+                    "primer_pago_texto",
+                    "segundo_pago_texto",
+                    "tercer_pago_texto",
+                    "retiro_inclusion_texto",
+                    "retiro_fuera_texto",
+
                     "cantidad_estudiantes_matriculados",
                     "total_no_exonerados",
                     "cantidad_exoneracion_50",

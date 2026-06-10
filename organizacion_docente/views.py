@@ -43,6 +43,12 @@ from .models import (
     PlantillaDocumento,
 )
 
+from .reports import (
+    construir_contexto_reportes,
+    generar_excel_reportes,
+    generar_pdf_reportes,
+)
+
 
 # ============================================================
 # Helpers de permisos básicos
@@ -1625,13 +1631,6 @@ def exportar_organizaciones_excel(request):
 
 @login_required
 def generar_nota_docente(request, pk):
-    """
-    Genera la nota dirigida al docente.
-    Formatos disponibles:
-    - PDF:  ?formato=pdf
-    - Word: ?formato=docx
-    """
-
     organizacion = get_object_or_404(
         OrganizacionDocente.objects.select_related(
             "docente",
@@ -1710,51 +1709,93 @@ def generar_calendario_pago(request, pk):
 
 @login_required
 def reportes(request):
+    """
+    Vista principal de reportes con filtros.
+    """
+
     organizaciones = queryset_organizaciones_base()
 
-    totales = organizaciones.aggregate(
-        total_ingresos=Sum("total_ingresos"),
-        total_pagos=Sum("pago_docente"),
-        utilidad_neta=Sum("utilidad_neta"),
+    filtro_form = OrganizacionDocenteFiltroForm(request.GET or None)
+
+    organizaciones = aplicar_filtros_organizaciones(
+        organizaciones,
+        filtro_form,
+    ).order_by(
+        "-anio",
+        "semestre",
+        "facultad__nombre",
+        "programa__nombre",
     )
 
-    por_facultad = (
-        organizaciones
-        .values("facultad__nombre", "facultad__siglas")
-        .annotate(
-            total=Count("id"),
-            total_ingresos=Sum("total_ingresos"),
-            total_pagos=Sum("pago_docente"),
-            utilidad_neta=Sum("utilidad_neta"),
-        )
-        .order_by("facultad__nombre")
-    )
+    contexto_reportes = construir_contexto_reportes(organizaciones)
 
-    por_programa = (
-        organizaciones
-        .values("programa__nombre", "facultad__siglas")
-        .annotate(
-            total=Count("id"),
-            total_ingresos=Sum("total_ingresos"),
-            total_pagos=Sum("pago_docente"),
-            utilidad_neta=Sum("utilidad_neta"),
-        )
-        .order_by("programa__nombre")
-    )
+    query_params = request.GET.copy()
+
+    if "page" in query_params:
+        query_params.pop("page")
+
+    querystring = query_params.urlencode()
 
     context = {
         "titulo": "Reportes",
-        "total_ingresos": totales.get("total_ingresos") or Decimal("0.00"),
-        "total_pagos": totales.get("total_pagos") or Decimal("0.00"),
-        "utilidad_neta": totales.get("utilidad_neta") or Decimal("0.00"),
-        "por_facultad": por_facultad,
-        "por_programa": por_programa,
+        "filtro_form": filtro_form,
+        "querystring": querystring,
+        **contexto_reportes,
     }
 
     return render(
         request,
         "organizacion_docente/reportes.html",
-        context
+        context,
+    )
+
+
+@login_required
+def reportes_exportar_excel(request):
+    """
+    Exporta los reportes filtrados a Excel.
+    """
+
+    organizaciones = queryset_organizaciones_base()
+
+    filtro_form = OrganizacionDocenteFiltroForm(request.GET or None)
+
+    organizaciones = aplicar_filtros_organizaciones(
+        organizaciones,
+        filtro_form,
+    ).order_by(
+        "-anio",
+        "semestre",
+        "facultad__nombre",
+        "programa__nombre",
+    )
+
+    return generar_excel_reportes(organizaciones)
+
+
+@login_required
+def reportes_exportar_pdf(request):
+    """
+    Exporta los reportes filtrados a PDF.
+    """
+
+    organizaciones = queryset_organizaciones_base()
+
+    filtro_form = OrganizacionDocenteFiltroForm(request.GET or None)
+
+    organizaciones = aplicar_filtros_organizaciones(
+        organizaciones,
+        filtro_form,
+    ).order_by(
+        "-anio",
+        "semestre",
+        "facultad__nombre",
+        "programa__nombre",
+    )
+
+    return generar_pdf_reportes(
+        organizaciones=organizaciones,
+        request=request,
     )
 
 

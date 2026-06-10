@@ -231,6 +231,18 @@ urlpatterns = [
         name="reportes",
     ),
 
+    path(
+    "reportes/exportar-excel/",
+    views.reportes_exportar_excel,
+    name="reportes_exportar_excel",
+    ),
+
+    path(
+        "reportes/exportar-pdf/",
+        views.reportes_exportar_pdf,
+        name="reportes_exportar_pdf",
+    ),
+
 
     # ========================================================
     # AJAX — Combos dinámicos

@@ -222,6 +222,9 @@ class OrganizacionDocente(ModeloBase):
         ("II", "II Semestre"),
         ("VERANO", "Verano"),
         ("ESPECIAL", "Periodo Especial"),
+        ("C1", "I Cuatrimestre"),
+        ("C2", "II Cuatrimestre"),
+        ("C3", "III Cuatrimestre"),
     ]
 
     numero_pago = models.CharField(
@@ -319,6 +322,49 @@ class OrganizacionDocente(ModeloBase):
         blank=True,
         null=True,
         verbose_name="Fecha de matrícula"
+    )
+
+    # Campos para calendario de matrícula y pago de estudiantes
+    fecha_matricula_texto = models.CharField(
+        "Fecha de matrícula texto",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: 16 y 17 de junio, 2026",
+    )
+
+    primer_pago_texto = models.CharField(
+        "Primer pago / Primer tercio",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Del 17 al 30 de junio de 2026",
+    )
+
+    segundo_pago_texto = models.CharField(
+        "Segundo pago / Segundo tercio",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Del 1 al 15 de julio de 2026",
+    )
+
+    tercer_pago_texto = models.CharField(
+        "Tercer pago / Tercer tercio",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Del 16 al 27 de julio de 2026",
+    )
+
+    retiro_inclusion_texto = models.CharField(
+        "Retiro/Inclusión de asignaturas",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Del 22 al 28 de junio de 2026",
+    )
+
+    retiro_fuera_texto = models.CharField(
+        "Retiro fuera del periodo",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Del 29 de junio al 24 de julio de 2026",
     )
 
     cantidad_estudiantes_matriculados = models.PositiveIntegerField(

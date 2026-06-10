@@ -416,6 +416,15 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
 
             # Matrícula
             "fecha_matricula",
+
+            # Calendario de matrícula y pago
+            "fecha_matricula_texto",
+            "primer_pago_texto",
+            "segundo_pago_texto",
+            "tercer_pago_texto",
+            "retiro_inclusion_texto",
+            "retiro_fuera_texto",
+
             "cantidad_estudiantes_matriculados",
             "total_no_exonerados",
             "cantidad_exoneracion_50",
@@ -455,6 +464,12 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "total_ingresos": "Total de ingresos",
             "pago_docente": "Pago del docente B/.",
             "observaciones": "Observaciones",
+            "fecha_matricula_texto": "Fecha de matrícula para calendario",
+            "primer_pago_texto": "Primer tercio / Pago total con descuento",
+            "segundo_pago_texto": "Segundo tercio",
+            "tercer_pago_texto": "Tercer tercio",
+            "retiro_inclusion_texto": "Retiro/Inclusión de asignaturas",
+            "retiro_fuera_texto": "Retiro fuera del periodo",
         }
 
         widgets = {
@@ -550,6 +565,37 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "observaciones": forms.Textarea(
                 attrs={
                     "placeholder": "Observaciones generales de la organización docente"
+                }
+            ),
+            # seccion de calendario de pago
+            "fecha_matricula_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: 16 y 17 de junio, 2026"
+                }
+            ),
+            "primer_pago_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Del 17 al 30 de junio de 2026"
+                }
+            ),
+            "segundo_pago_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Del 1 al 15 de julio de 2026"
+                }
+            ),
+            "tercer_pago_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Del 16 al 27 de julio de 2026"
+                }
+            ),
+            "retiro_inclusion_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Del 22 al 28 de junio de 2026"
+                }
+            ),
+            "retiro_fuera_texto": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Del 29 de junio al 24 de julio de 2026"
                 }
             ),
         }

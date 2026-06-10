@@ -5,27 +5,166 @@
 
 {% block content %}
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <p class="text-sm text-slate-500">Total de ingresos</p>
-        <h3 class="text-3xl font-black text-green-700 mt-2">B/. {{ total_ingresos|floatformat:2 }}</h3>
+<div class="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <div>
+        <h3 class="text-3xl font-black text-slate-800">
+            Reportes de organización docente
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Información generada al {{ fecha_generacion|date:"d/m/Y H:i" }}.
+        </p>
     </div>
 
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <p class="text-sm text-slate-500">Pagos docentes</p>
-        <h3 class="text-3xl font-black text-blue-700 mt-2">B/. {{ total_pagos|floatformat:2 }}</h3>
-    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'reportes_exportar_excel' %}{% if querystring %}?{{ querystring }}{% endif %}"
+           class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+            Exportar Excel
+        </a>
 
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <p class="text-sm text-slate-500">Utilidad neta</p>
-        <h3 class="text-3xl font-black text-slate-800 mt-2">B/. {{ utilidad_neta|floatformat:2 }}</h3>
+        <a href="{% url 'reportes_exportar_pdf' %}{% if querystring %}?{{ querystring }}{% endif %}"
+           class="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700">
+            Exportar PDF
+        </a>
     </div>
 </div>
 
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<!-- Filtros -->
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="xl:col-span-2">
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.q.label }}</label>
+            {{ filtro_form.q }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.anio.label }}</label>
+            {{ filtro_form.anio }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.semestre.label }}</label>
+            {{ filtro_form.semestre }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.facultad.label }}</label>
+            {{ filtro_form.facultad }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.programa.label }}</label>
+            {{ filtro_form.programa }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.docente.label }}</label>
+            {{ filtro_form.docente }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.asignatura.label }}</label>
+            {{ filtro_form.asignatura }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.estado_general.label }}</label>
+            {{ filtro_form.estado_general }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.tipo_estado.label }}</label>
+            {{ filtro_form.tipo_estado }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.situacion_estado.label }}</label>
+            {{ filtro_form.situacion_estado }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.fecha_inicio.label }}</label>
+            {{ filtro_form.fecha_inicio }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">{{ filtro_form.fecha_fin.label }}</label>
+            {{ filtro_form.fecha_fin }}
+        </div>
+
+        <div class="flex items-end gap-2">
+            <button class="rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+                Filtrar
+            </button>
+
+            <a href="{% url 'reportes' %}"
+               class="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                Limpiar
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Tarjetas principales -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-slate-500">Organizaciones</p>
+        <h3 class="text-4xl font-black text-slate-800 mt-2">{{ total_organizaciones }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-slate-500">Ingresos</p>
+        <h3 class="text-3xl font-black text-green-700 mt-2">B/. {{ total_ingresos|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-slate-500">Pagos docentes</p>
+        <h3 class="text-3xl font-black text-blue-700 mt-2">B/. {{ total_pagos|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-slate-500">Utilidad neta</p>
+        <h3 class="text-3xl font-black text-emerald-700 mt-2">B/. {{ utilidad_neta|floatformat:2 }}</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-slate-500">Ingreso laboratorio</p>
+        <h3 class="text-3xl font-black text-indigo-700 mt-2">B/. {{ ingreso_laboratorio|floatformat:2 }}</h3>
+    </div>
+</div>
+
+<!-- Pendientes -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+    <div class="bg-yellow-50 rounded-3xl border border-yellow-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-yellow-700">Pendientes VIPE</p>
+        <h3 class="text-4xl font-black text-yellow-800 mt-2">{{ pendientes_vipe }}</h3>
+        <p class="text-xs text-slate-500 mt-2">Enviadas: {{ enviadas_vipe }}</p>
+    </div>
+
+    <div class="bg-red-50 rounded-3xl border border-red-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-red-700">Pendientes firma</p>
+        <h3 class="text-4xl font-black text-red-800 mt-2">{{ pendientes_firma }}</h3>
+        <p class="text-xs text-slate-500 mt-2">Firmadas: {{ firmadas_autoridades }}</p>
+    </div>
+
+    <div class="bg-blue-50 rounded-3xl border border-blue-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-blue-700">Pendientes RH</p>
+        <h3 class="text-4xl font-black text-blue-800 mt-2">{{ pendientes_rh }}</h3>
+        <p class="text-xs text-slate-500 mt-2">Enviadas: {{ enviadas_rh }}</p>
+    </div>
+
+    <div class="bg-indigo-50 rounded-3xl border border-indigo-200 p-6 shadow-sm">
+        <p class="text-sm font-bold text-indigo-700">Actas pendientes</p>
+        <h3 class="text-4xl font-black text-indigo-800 mt-2">{{ actas_pendientes }}</h3>
+        <p class="text-xs text-slate-500 mt-2">Recibidas: {{ actas_recibidas }}</p>
+    </div>
+</div>
+
+<!-- Tablas principales -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100">
-            <h3 class="text-lg font-black text-slate-800">Resumen por facultad</h3>
+            <h4 class="text-lg font-black text-slate-800">Organizaciones por facultad</h4>
         </div>
 
         <div class="overflow-x-auto">
@@ -39,14 +178,17 @@
                         <th class="px-4 py-3">Utilidad</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-slate-100">
                     {% for item in por_facultad %}
                         <tr>
-                            <td class="px-4 py-3 font-bold">{{ item.facultad__siglas|default:item.facultad__nombre }}</td>
+                            <td class="px-4 py-3 font-bold">
+                                {{ item.facultad__siglas|default:item.facultad__nombre }}
+                            </td>
                             <td class="px-4 py-3">{{ item.total }}</td>
                             <td class="px-4 py-3">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
                             <td class="px-4 py-3">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
-                            <td class="px-4 py-3 font-bold">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-black">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -60,7 +202,7 @@
 
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="p-6 border-b border-slate-100">
-            <h3 class="text-lg font-black text-slate-800">Resumen por programa</h3>
+            <h4 class="text-lg font-black text-slate-800">Utilidad neta por programa</h4>
         </div>
 
         <div class="overflow-x-auto">
@@ -74,14 +216,18 @@
                         <th class="px-4 py-3">Utilidad</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-slate-100">
                     {% for item in por_programa %}
                         <tr>
-                            <td class="px-4 py-3 font-bold">{{ item.programa__nombre }}</td>
+                            <td class="px-4 py-3 font-bold">
+                                <p>{{ item.programa__nombre }}</p>
+                                <p class="text-xs text-slate-400">{{ item.facultad__siglas|default:"-" }}</p>
+                            </td>
                             <td class="px-4 py-3">{{ item.total }}</td>
                             <td class="px-4 py-3">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
                             <td class="px-4 py-3">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
-                            <td class="px-4 py-3 font-bold">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-black">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
                         </tr>
                     {% empty %}
                         <tr>
@@ -92,6 +238,85 @@
             </table>
         </div>
     </div>
+
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h4 class="text-lg font-black text-slate-800">Pagos docentes por semestre</h4>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Año</th>
+                        <th class="px-4 py-3">Semestre</th>
+                        <th class="px-4 py-3">Total</th>
+                        <th class="px-4 py-3">Ingresos</th>
+                        <th class="px-4 py-3">Pagos</th>
+                        <th class="px-4 py-3">Utilidad</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in pagos_por_semestre %}
+                        <tr>
+                            <td class="px-4 py-3 font-bold">{{ item.anio }}</td>
+                            <td class="px-4 py-3">{{ item.semestre }}</td>
+                            <td class="px-4 py-3">{{ item.total }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_ingresos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                            <td class="px-4 py-3 font-black">B/. {{ item.utilidad_neta|default_if_none:0|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">No hay datos.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h4 class="text-lg font-black text-slate-800">Resumen por docente</h4>
+        </div>
+
+        <div class="overflow-x-auto max-h-[420px]">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-left text-slate-500 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-3">Docente</th>
+                        <th class="px-4 py-3">Cédula</th>
+                        <th class="px-4 py-3">Org.</th>
+                        <th class="px-4 py-3">Horas</th>
+                        <th class="px-4 py-3">Pagos</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in por_docente %}
+                        <tr>
+                            <td class="px-4 py-3 font-bold">{{ item.docente__nombre_completo }}</td>
+                            <td class="px-4 py-3">{{ item.cedula_docente|default:"-" }}</td>
+                            <td class="px-4 py-3">{{ item.total }}</td>
+                            <td class="px-4 py-3">{{ item.total_horas|default_if_none:0 }}</td>
+                            <td class="px-4 py-3 font-black">B/. {{ item.total_pagos|default_if_none:0|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">No hay datos.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 {% endblock %}
