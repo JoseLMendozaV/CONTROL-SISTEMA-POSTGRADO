@@ -12,6 +12,7 @@ from .models import (
     EstadoProcesoOrganizacion,
     PlantillaDocumento,
     HistorialCambio,
+    CohorteProgramaPostgrado,
 )
 
 
@@ -316,6 +317,10 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
         ("docente", admin.RelatedOnlyFieldListFilter),
         ("asignatura", admin.RelatedOnlyFieldListFilter),
         "activo",
+        "incluir_en_informe_programas",
+        "estado_informe_programa",
+        "periodo_inicio_programa",
+        "periodo_finalizacion_programa",
     )
 
     search_fields = (
@@ -430,6 +435,26 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
                 )
             },
         ),
+
+        (
+            "Informe anual de programas de postgrado",
+            {
+                "fields": (
+                    "incluir_en_informe_programas",
+                    "estado_informe_programa",
+                    "matriculados_inicio_programa",
+                    "matriculados_actuales_programa",
+                    "periodo_inicio_programa",
+                    "periodo_finalizacion_programa",
+                    "inicio_texto_programa",
+                    "finaliza_texto_programa",
+                    "observacion_informe_programa",
+                )
+            },
+        ),
+
+
+
         (
             "Observaciones y auditoría",
             {
@@ -953,3 +978,90 @@ class HistorialCambioAdmin(admin.ModelAdmin):
         Solo el superusuario puede eliminar historial.
         """
         return request.user.is_superuser
+
+
+@admin.register(CohorteProgramaPostgrado)
+class CohorteProgramaPostgradoAdmin(admin.ModelAdmin):
+    list_display = (
+        "programa",
+        "grupo",
+        "facultad_nombre",
+        "anio_reporte",
+        "estado_informe",
+        "matriculados_inicio",
+        "matriculados_actualmente",
+        "periodo_inicio",
+        "periodo_finalizacion",
+        "observacion",
+        "activo",
+    )
+
+    list_filter = (
+        "anio_reporte",
+        "estado_informe",
+        "periodo_inicio",
+        "periodo_finalizacion",
+        "programa__facultad",
+        "activo",
+    )
+
+    search_fields = (
+        "programa__nombre",
+        "programa__facultad__nombre",
+        "programa__facultad__siglas",
+        "grupo",
+        "inicio_texto",
+        "finaliza_texto",
+        "observacion",
+    )
+
+    autocomplete_fields = (
+        "programa",
+    )
+
+    fieldsets = (
+        (
+            "Información del programa",
+            {
+                "fields": (
+                    "programa",
+                    "grupo",
+                    "anio_reporte",
+                    "estado_informe",
+                    "activo",
+                )
+            },
+        ),
+        (
+            "Matrícula",
+            {
+                "fields": (
+                    "matriculados_inicio",
+                    "matriculados_actualmente",
+                )
+            },
+        ),
+        (
+            "Periodos",
+            {
+                "fields": (
+                    "periodo_inicio",
+                    "periodo_finalizacion",
+                    "inicio_texto",
+                    "finaliza_texto",
+                )
+            },
+        ),
+        (
+            "Observación",
+            {
+                "fields": (
+                    "observacion",
+                )
+            },
+        ),
+    )
+
+    @admin.display(description="Facultad")
+    def facultad_nombre(self, obj):
+        return obj.programa.facultad

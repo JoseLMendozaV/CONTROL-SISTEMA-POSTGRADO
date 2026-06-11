@@ -7,13 +7,13 @@ from django.utils import timezone
 from .models import (
     Facultad,
     ProgramaPostgrado,
+    CohorteProgramaPostgrado,
     Docente,
     Asignatura,
     OrganizacionDocente,
     EstadoProcesoOrganizacion,
     PlantillaDocumento,
 )
-
 
 # ============================================================
 # Mixin para aplicar clases Tailwind CSS a todos los formularios
@@ -438,6 +438,18 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
 
             # Observaciones
             "observaciones",
+
+
+            # Informe anual de programas
+            "incluir_en_informe_programas",
+            "estado_informe_programa",
+            "matriculados_inicio_programa",
+            "matriculados_actuales_programa",
+            "periodo_inicio_programa",
+            "periodo_finalizacion_programa",
+            "inicio_texto_programa",
+            "finaliza_texto_programa",
+            "observacion_informe_programa",
         ]
 
         labels = {
@@ -470,6 +482,17 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "tercer_pago_texto": "Tercer tercio",
             "retiro_inclusion_texto": "Retiro/Inclusión de asignaturas",
             "retiro_fuera_texto": "Retiro fuera del periodo",
+
+
+            "incluir_en_informe_programas": "Incluir en informe anual de programas",
+            "estado_informe_programa": "Estado del programa en el informe",
+            "matriculados_inicio_programa": "Matriculados al inicio del programa",
+            "matriculados_actuales_programa": "Matriculados actualmente",
+            "periodo_inicio_programa": "Periodo de inicio",
+            "periodo_finalizacion_programa": "Periodo de finalización",
+            "inicio_texto_programa": "Inicio texto",
+            "finaliza_texto_programa": "Finaliza texto",
+            "observacion_informe_programa": "Observación del informe",
         }
 
         widgets = {
@@ -598,6 +621,22 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
                     "placeholder": "Ejemplo: Del 29 de junio al 24 de julio de 2026"
                 }
             ),
+
+            "inicio_texto_programa": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: I Semestre, 2025 (Mayo, 2025)"
+                }
+            ),
+            "finaliza_texto_programa": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: Verano, 2027 (Enero - Abril, 2027)"
+                }
+            ),
+            "observacion_informe_programa": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: ACTIVO, CULMINÓ, ACTIVO AL 2026"
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -672,6 +711,15 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         total_horas = cleaned_data.get("total_horas") or Decimal("0.00")
         total_creditos = cleaned_data.get("total_creditos") or Decimal("0.00")
         total_laboratorio = cleaned_data.get("total_laboratorio") or Decimal("0.00")
+
+        incluir_en_informe = cleaned_data.get("incluir_en_informe_programas")
+        estado_informe = cleaned_data.get("estado_informe_programa")
+
+        if incluir_en_informe and not estado_informe:
+            self.add_error(
+                "estado_informe_programa",
+                "Debes seleccionar si el programa continúa, inició o culminó."
+            )
 
         if programa and facultad and programa.facultad_id != facultad.id:
             self.add_error(
@@ -1110,3 +1158,62 @@ class OrganizacionDocenteFiltroForm(TailwindFormMixin, forms.Form):
             )
 
         return cleaned_data
+
+
+class InformeProgramasFiltroForm(TailwindFormMixin, forms.Form):
+    anio = forms.IntegerField(
+        label="Año del informe",
+        required=True,
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Ejemplo: 2025"
+            }
+        ),
+    )
+
+    tipo_periodo = forms.ChoiceField(
+        label="Tipo de periodo",
+        required=False,
+        choices=[
+            ("TODO", "Todo el año"),
+            ("SEMESTRE", "Por semestre"),
+            ("CUATRIMESTRE", "Por cuatrimestre"),
+            ("TRIMESTRE", "Por trimestre"),
+            ("VERANO", "Verano"),
+        ],
+    )
+
+    periodo = forms.ChoiceField(
+        label="Periodo específico",
+        required=False,
+        choices=[
+            ("", "Todos"),
+            ("VERANO", "Verano"),
+            ("I", "I Semestre"),
+            ("II", "II Semestre"),
+            ("C1", "I Cuatrimestre"),
+            ("C2", "II Cuatrimestre"),
+            ("C3", "III Cuatrimestre"),
+            ("T1", "I Trimestre"),
+            ("T2", "II Trimestre"),
+            ("T3", "III Trimestre"),
+            ("T4", "IV Trimestre"),
+            ("ESPECIAL", "Periodo Especial"),
+        ],
+    )
+
+    facultad = forms.ModelChoiceField(
+        label="Facultad",
+        required=False,
+        queryset=Facultad.objects.none(),
+        empty_label="Todas las facultades",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["facultad"].queryset = Facultad.objects.filter(
+            activo=True
+        ).order_by("nombre")
+
+        self.aplicar_estilos_tailwind()

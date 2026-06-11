@@ -267,6 +267,106 @@
     </div>
 </div>
 
+<!-- Información para informe anual de programas -->
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+    <div class="mb-6">
+        <h3 class="text-lg font-black text-slate-800">
+            Informe anual de programas de postgrado
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Completa esta sección solo si esta organización docente debe aparecer en el informe institucional de programas.
+        </p>
+    </div>
+
+    <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-6">
+        <h4 class="text-sm font-black text-amber-900 mb-1">
+            Datos complementarios del informe
+        </h4>
+        <p class="text-xs text-amber-700">
+            El reporte tomará la facultad, programa, grupo, año, periodo e ingresos desde esta organización docente.
+            Aquí solo se anexan los datos que no están en el registro principal.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+        <div class="xl:col-span-3">
+            <label class="inline-flex items-center gap-2">
+                {{ form.incluir_en_informe_programas }}
+                <span class="text-sm font-bold text-slate-700">
+                    {{ form.incluir_en_informe_programas.label }}
+                </span>
+            </label>
+            {{ form.incluir_en_informe_programas.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.estado_informe_programa.label }}
+            </label>
+            {{ form.estado_informe_programa }}
+            {{ form.estado_informe_programa.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.matriculados_inicio_programa.label }}
+            </label>
+            {{ form.matriculados_inicio_programa }}
+            {{ form.matriculados_inicio_programa.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.matriculados_actuales_programa.label }}
+            </label>
+            {{ form.matriculados_actuales_programa }}
+            {{ form.matriculados_actuales_programa.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.periodo_inicio_programa.label }}
+            </label>
+            {{ form.periodo_inicio_programa }}
+            {{ form.periodo_inicio_programa.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.periodo_finalizacion_programa.label }}
+            </label>
+            {{ form.periodo_finalizacion_programa }}
+            {{ form.periodo_finalizacion_programa.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.observacion_informe_programa.label }}
+            </label>
+            {{ form.observacion_informe_programa }}
+            {{ form.observacion_informe_programa.errors }}
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.inicio_texto_programa.label }}
+            </label>
+            {{ form.inicio_texto_programa }}
+            {{ form.inicio_texto_programa.errors }}
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.finaliza_texto_programa.label }}
+            </label>
+            {{ form.finaliza_texto_programa }}
+            {{ form.finaliza_texto_programa.errors }}
+        </div>
+
+    </div>
+</div>
+
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
         <h3 class="text-lg font-black text-slate-800 mb-5">Información financiera</h3>
 

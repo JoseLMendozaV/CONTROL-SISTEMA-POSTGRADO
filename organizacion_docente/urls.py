@@ -294,4 +294,10 @@ urlpatterns = [
     views.generar_calendario_pago,
     name="generar_calendario_pago",
     ),
+
+    path(
+    "reportes/informe-programas/",
+    views.informe_programas_postgrado,
+    name="informe_programas_postgrado",
+    ),
 ]

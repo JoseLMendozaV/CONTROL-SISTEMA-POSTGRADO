@@ -31,6 +31,7 @@ from .forms import (
     ImportarOrganizacionesExcelForm,
     OrganizacionDocenteFiltroForm,
     PlantillaDocumentoForm,
+    InformeProgramasFiltroForm,
 )
 
 from .models import (
@@ -47,6 +48,7 @@ from .reports import (
     construir_contexto_reportes,
     generar_excel_reportes,
     generar_pdf_reportes,
+    generar_excel_informe_programas,
 )
 
 
@@ -1931,3 +1933,42 @@ def ajax_datos_asignatura(request):
     }
 
     return JsonResponse(data)
+
+
+@login_required
+def informe_programas_postgrado(request):
+    """
+    Vista para generar el informe anual de programas de postgrado,
+    con el formato del Excel oficial.
+    """
+
+    initial = {
+        "anio": timezone.now().year,
+        "tipo_periodo": "TODO",
+    }
+
+    form = InformeProgramasFiltroForm(request.GET or None, initial=initial)
+
+    if request.GET and form.is_valid():
+        anio = form.cleaned_data["anio"]
+        tipo_periodo = form.cleaned_data.get("tipo_periodo") or "TODO"
+        periodo = form.cleaned_data.get("periodo") or ""
+        facultad = form.cleaned_data.get("facultad")
+
+        return generar_excel_informe_programas(
+            anio=anio,
+            tipo_periodo=tipo_periodo,
+            periodo=periodo,
+            facultad=facultad,
+        )
+
+    context = {
+        "titulo": "Informe de Programas de Postgrado",
+        "form": form,
+    }
+
+    return render(
+        request,
+        "organizacion_docente/informe_programas.html",
+        context,
+    )

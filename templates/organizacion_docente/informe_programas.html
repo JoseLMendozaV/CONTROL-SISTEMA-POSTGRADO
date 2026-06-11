@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Informe de Programas{% endblock %}
+{% block header %}Informe de Programas de Postgrado{% endblock %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto">
+
+    <div class="mb-8">
+        <h3 class="text-3xl font-black text-slate-800">
+            Informe de Programas de Postgrado
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Genera un Excel con el mismo estilo del informe institucional:
+            programas que continuaron, culminaron, iniciaron e ingresos por programa.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">
+                    {{ form.anio.label }}
+                </label>
+                {{ form.anio }}
+                {{ form.anio.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">
+                    {{ form.tipo_periodo.label }}
+                </label>
+                {{ form.tipo_periodo }}
+                {{ form.tipo_periodo.errors }}
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">
+                    {{ form.periodo.label }}
+                </label>
+                {{ form.periodo }}
+                {{ form.periodo.errors }}
+                <p class="text-xs text-slate-400 mt-1">
+                    Déjalo en “Todos” para generar el informe completo según el tipo de periodo.
+                </p>
+            </div>
+
+            <div>
+                <label class="text-sm font-bold text-slate-700">
+                    {{ form.facultad.label }}
+                </label>
+                {{ form.facultad }}
+                {{ form.facultad.errors }}
+            </div>
+
+            <div class="md:col-span-2 flex justify-end gap-2 pt-4 border-t border-slate-100">
+                <a href="{% url 'reportes' %}"
+                   class="rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-200">
+                    Volver
+                </a>
+
+                <button type="submit"
+                        class="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-green-700">
+                    Generar Excel
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

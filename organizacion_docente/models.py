@@ -227,6 +227,13 @@ class OrganizacionDocente(ModeloBase):
         ("C3", "III Cuatrimestre"),
     ]
 
+    ESTADO_INFORME_PROGRAMA_CHOICES = [
+        ("", "No incluir en informe"),
+        ("CONTINUA", "Programa que continúa"),
+        ("CULMINADO", "Programa culminado"),
+        ("INICIADO", "Programa que inició"),
+    ]
+
     numero_pago = models.CharField(
         max_length=50,
         blank=True,
@@ -429,6 +436,76 @@ class OrganizacionDocente(ModeloBase):
         verbose_name="Utilidad neta"
     )
 
+    # ========================================================
+    # Campos para informe anual de programas de postgrado
+    # ========================================================
+
+    incluir_en_informe_programas = models.BooleanField(
+        "Incluir en informe de programas",
+        default=False,
+        help_text="Marca esta opción si esta organización debe aparecer en el informe anual de programas.",
+    )
+
+    estado_informe_programa = models.CharField(
+        "Estado del programa en el informe",
+        max_length=20,
+        choices=ESTADO_INFORME_PROGRAMA_CHOICES,
+        blank=True,
+        default="",
+        help_text="Indica si el programa continúa, inició o culminó en el año del informe.",
+    )
+
+    matriculados_inicio_programa = models.PositiveIntegerField(
+        "Matriculados al inicio del programa",
+        null=True,
+        blank=True,
+        help_text="Ejemplo: cantidad de estudiantes con la que inició el grupo o cohorte.",
+    )
+
+    matriculados_actuales_programa = models.PositiveIntegerField(
+        "Matriculados actualmente",
+        null=True,
+        blank=True,
+        help_text="Si se deja vacío, se puede usar la cantidad de estudiantes matriculados de la organización docente.",
+    )
+
+    periodo_inicio_programa = models.CharField(
+        "Periodo de inicio del programa",
+        max_length=20,
+        choices=SEMESTRE_CHOICES,
+        blank=True,
+        help_text="Periodo académico en que inició el programa o cohorte.",
+    )
+
+    periodo_finalizacion_programa = models.CharField(
+        "Periodo de finalización del programa",
+        max_length=20,
+        choices=SEMESTRE_CHOICES,
+        blank=True,
+        help_text="Periodo académico estimado o real de finalización del programa.",
+    )
+
+    inicio_texto_programa = models.CharField(
+        "Inicio texto para informe",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: I Semestre, 2025 (Mayo, 2025)",
+    )
+
+    finaliza_texto_programa = models.CharField(
+        "Finaliza texto para informe",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Verano, 2027 (Enero - Abril, 2027)",
+    )
+
+    observacion_informe_programa = models.CharField(
+        "Observación para informe",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: ACTIVO, CULMINÓ, ACTIVO AL 2026",
+    )
+
     observaciones = models.TextField(
         blank=True,
         null=True,
@@ -439,6 +516,48 @@ class OrganizacionDocente(ModeloBase):
         default=True,
         verbose_name="Activo"
     )
+
+
+    @property
+    def matriculados_inicio_reporte(self):
+        if self.matriculados_inicio_programa is not None:
+            return self.matriculados_inicio_programa
+
+        return self.cantidad_estudiantes_matriculados or 0
+
+    @property
+    def matriculados_actuales_reporte(self):
+        if self.matriculados_actuales_programa is not None:
+            return self.matriculados_actuales_programa
+
+        return self.cantidad_estudiantes_matriculados or 0
+
+    @property
+    def inicio_texto_reporte(self):
+        if self.inicio_texto_programa:
+            return self.inicio_texto_programa
+
+        if self.periodo_inicio_programa:
+            return f"{self.get_periodo_inicio_programa_display()}, {self.anio}"
+
+        return self.get_semestre_display()
+
+    @property
+    def finaliza_texto_reporte(self):
+        if self.finaliza_texto_programa:
+            return self.finaliza_texto_programa
+
+        if self.periodo_finalizacion_programa:
+            return f"{self.get_periodo_finalizacion_programa_display()}, {self.anio}"
+
+        return ""
+
+    @property
+    def observacion_reporte(self):
+        return self.observacion_informe_programa or "ACTIVO"
+
+
+    
 
     class Meta:
         verbose_name = "Organización Docente"
@@ -821,3 +940,129 @@ class HistorialCambio(ModeloBase):
 
     def __str__(self):
         return f"{self.organizacion} - {self.campo}"
+
+
+class CohorteProgramaPostgrado(ModeloBase):
+    """
+    Modelo para registrar cohortes o grupos de programas de postgrado
+    y generar informes anuales institucionales.
+
+    Ejemplo:
+    Maestría en Agronegocios, grupo 2AG211, año 2025,
+    programa que inició, continuó o culminó.
+    """
+
+    ESTADO_INFORME_CHOICES = [
+        ("CONTINUA", "Programa que continúa"),
+        ("CULMINADO", "Programa culminado"),
+        ("INICIADO", "Programa que inició"),
+    ]
+
+    PERIODO_CHOICES = [
+        ("VERANO", "Verano"),
+        ("I", "I Semestre"),
+        ("II", "II Semestre"),
+        ("T1", "I Trimestre"),
+        ("T2", "II Trimestre"),
+        ("T3", "III Trimestre"),
+        ("T4", "IV Trimestre"),
+        ("C1", "I Cuatrimestre"),
+        ("C2", "II Cuatrimestre"),
+        ("C3", "III Cuatrimestre"),
+        ("ESPECIAL", "Periodo Especial"),
+    ]
+
+    programa = models.ForeignKey(
+        ProgramaPostgrado,
+        on_delete=models.PROTECT,
+        related_name="cohortes",
+        verbose_name="Programa de postgrado",
+    )
+
+    grupo = models.CharField(
+        "Grupo",
+        max_length=50,
+        blank=True,
+        help_text="Ejemplo: 2AG211, 2MD212, 2MO211",
+    )
+
+    anio_reporte = models.PositiveIntegerField(
+        "Año del reporte",
+        help_text="Ejemplo: 2025",
+    )
+
+    estado_informe = models.CharField(
+        "Tipo de registro para informe",
+        max_length=20,
+        choices=ESTADO_INFORME_CHOICES,
+        default="CONTINUA",
+        help_text="Indica si el programa continuó, culminó o inició en el año del informe.",
+    )
+
+    matriculados_inicio = models.PositiveIntegerField(
+        "Matriculados al inicio del programa",
+        default=0,
+    )
+
+    matriculados_actualmente = models.PositiveIntegerField(
+        "Matriculados actualmente",
+        default=0,
+    )
+
+    periodo_inicio = models.CharField(
+        "Periodo de inicio",
+        max_length=20,
+        choices=PERIODO_CHOICES,
+        blank=True,
+    )
+
+    periodo_finalizacion = models.CharField(
+        "Periodo de finalización",
+        max_length=20,
+        choices=PERIODO_CHOICES,
+        blank=True,
+    )
+
+    inicio_texto = models.CharField(
+        "Inicio texto",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: I Semestre, 2025 (Mayo, 2025)",
+    )
+
+    finaliza_texto = models.CharField(
+        "Finaliza texto",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: Verano, 2027 (Enero - Abril, 2027)",
+    )
+
+    observacion = models.CharField(
+        "Observación",
+        max_length=255,
+        blank=True,
+        help_text="Ejemplo: ACTIVO, CULMINÓ, ACTIVO AL 2026",
+    )
+
+    activo = models.BooleanField(
+        "Activo",
+        default=True,
+    )
+
+    class Meta:
+        verbose_name = "Cohorte de programa de postgrado"
+        verbose_name_plural = "Cohortes de programas de postgrado"
+        ordering = [
+            "-anio_reporte",
+            "programa__facultad__nombre",
+            "programa__nombre",
+            "grupo",
+        ]
+
+    def __str__(self):
+        grupo = f" - {self.grupo}" if self.grupo else ""
+        return f"{self.programa.nombre}{grupo} ({self.anio_reporte})"
+
+    @property
+    def facultad(self):
+        return self.programa.facultad

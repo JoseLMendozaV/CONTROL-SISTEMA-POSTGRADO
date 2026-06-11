@@ -10,6 +10,11 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 
+from .models import CohorteProgramaPostgrado
+
+from django.db.models import Count, Sum, Q
+from .models import OrganizacionDocente, ProgramaPostgrado
+
 
 COLOR_PRIMARIO = "0F3D5E"
 COLOR_GRIS = "F1F5F9"
@@ -458,6 +463,544 @@ def generar_pdf_reportes(organizaciones, request=None):
     response = HttpResponse(
         pdf_file,
         content_type="application/pdf",
+    )
+
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    return response
+
+
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+from django.db.models import Count, Sum, Q
+from .models import OrganizacionDocente, ProgramaPostgrado, CohorteProgramaPostgrado
+
+
+# ============================================================
+# Informe de Programas de Postgrado estilo Excel oficial
+# ============================================================
+
+def etiqueta_periodo_reporte(tipo_periodo, periodo):
+    if tipo_periodo == "SEMESTRE":
+        if periodo == "I":
+            return "I SEMESTRE"
+        if periodo == "II":
+            return "II SEMESTRE"
+        return "SEMESTRES"
+
+    if tipo_periodo == "CUATRIMESTRE":
+        if periodo == "C1":
+            return "I CUATRIMESTRE"
+        if periodo == "C2":
+            return "II CUATRIMESTRE"
+        if periodo == "C3":
+            return "III CUATRIMESTRE"
+        return "CUATRIMESTRES"
+
+    if tipo_periodo == "TRIMESTRE":
+        if periodo == "T1":
+            return "I TRIMESTRE"
+        if periodo == "T2":
+            return "II TRIMESTRE"
+        if periodo == "T3":
+            return "III TRIMESTRE"
+        if periodo == "T4":
+            return "IV TRIMESTRE"
+        return "TRIMESTRES"
+
+    if tipo_periodo == "VERANO":
+        return "VERANO"
+
+    return "AÑO COMPLETO"
+
+
+def periodos_para_ingresos(tipo_periodo):
+    if tipo_periodo == "SEMESTRE":
+        return [
+            ("VERANO", "VERANO"),
+            ("I", "I SEMESTRE"),
+            ("II", "II SEMESTRE"),
+        ]
+
+    if tipo_periodo == "CUATRIMESTRE":
+        return [
+            ("C1", "I CUATRIMESTRE"),
+            ("C2", "II CUATRIMESTRE"),
+            ("C3", "III CUATRIMESTRE"),
+        ]
+
+    if tipo_periodo == "TRIMESTRE":
+        return [
+            ("T1", "I TRIMESTRE"),
+            ("T2", "II TRIMESTRE"),
+            ("T3", "III TRIMESTRE"),
+            ("T4", "IV TRIMESTRE"),
+        ]
+
+    if tipo_periodo == "VERANO":
+        return [
+            ("VERANO", "VERANO"),
+        ]
+
+    return [
+        ("VERANO", "VERANO"),
+        ("I", "I SEMESTRE"),
+        ("II", "II SEMESTRE"),
+        ("C1", "I CUATRIMESTRE"),
+        ("C2", "II CUATRIMESTRE"),
+        ("C3", "III CUATRIMESTRE"),
+        ("T1", "I TRIMESTRE"),
+        ("T2", "II TRIMESTRE"),
+        ("T3", "III TRIMESTRE"),
+        ("T4", "IV TRIMESTRE"),
+    ]
+
+
+def aplicar_estilo_informe_programas(ws):
+    thin = Side(style="thin", color="000000")
+    borde = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.border = borde
+            cell.alignment = Alignment(
+                vertical="center",
+                wrap_text=True,
+            )
+
+    ws.sheet_view.showGridLines = False
+
+
+def escribir_titulo_informe(ws, fila, titulo):
+    ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=8)
+    cell = ws.cell(row=fila, column=1)
+    cell.value = titulo
+    cell.font = Font(bold=True, size=12)
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    return fila + 1
+
+
+def escribir_encabezado_centro(ws, fila, titulo):
+    ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=8)
+    ws.cell(row=fila, column=1).value = "CENTRO REGIONAL DE CHIRIQUI"
+    ws.cell(row=fila, column=1).font = Font(bold=True)
+    fila += 1
+
+    ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=8)
+    ws.cell(row=fila, column=1).value = "UNIDAD DE POSTGRADO"
+    ws.cell(row=fila, column=1).font = Font(bold=True)
+    fila += 1
+
+    return escribir_titulo_informe(ws, fila, titulo)
+
+
+def escribir_bloque_organizaciones_informe(
+    ws,
+    fila,
+    titulo,
+    organizaciones,
+    iniciado=False,
+):
+    fila = escribir_encabezado_centro(ws, fila, titulo)
+    fila += 1
+
+    if iniciado:
+        headers = [
+            "No.",
+            "FACULTAD",
+            "PROGRAMA",
+            "Matriculados al inicio del programa",
+            "Matriculados actualmente",
+            "Inicia",
+            "Finaliza",
+            "OBS.",
+        ]
+    else:
+        headers = [
+            "No.",
+            "FACULTAD",
+            "PROGRAMA",
+            "Matriculados Actualmente",
+            "Inicia",
+            "Finaliza",
+            "OBSERVACIÓN",
+            "",
+        ]
+
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=fila, column=col)
+        cell.value = header
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill("solid", fgColor="D9EAF7")
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+            wrap_text=True,
+        )
+
+    fila += 1
+
+    for index, org in enumerate(organizaciones, start=1):
+        facultad = org.facultad.nombre
+
+        programa_nombre = org.programa.nombre
+
+        if org.grupo_aula:
+            programa_nombre = f"{programa_nombre} ({org.grupo_aula})"
+
+        ws.cell(row=fila, column=1).value = index
+        ws.cell(row=fila, column=2).value = facultad
+        ws.cell(row=fila, column=3).value = programa_nombre
+
+        if iniciado:
+            ws.cell(row=fila, column=4).value = org.matriculados_inicio_reporte
+            ws.cell(row=fila, column=5).value = org.matriculados_actuales_reporte
+            ws.cell(row=fila, column=6).value = org.inicio_texto_reporte
+            ws.cell(row=fila, column=7).value = org.finaliza_texto_reporte
+            ws.cell(row=fila, column=8).value = org.observacion_reporte
+        else:
+            ws.cell(row=fila, column=4).value = org.matriculados_actuales_reporte
+            ws.cell(row=fila, column=5).value = org.inicio_texto_reporte
+            ws.cell(row=fila, column=6).value = org.finaliza_texto_reporte
+            ws.cell(row=fila, column=7).value = org.observacion_reporte
+
+        fila += 1
+
+    return fila + 3
+
+
+def obtener_organizaciones_informe_filtradas(
+    anio,
+    tipo_periodo="TODO",
+    periodo="",
+    facultad=None,
+):
+    """
+    Obtiene organizaciones docentes marcadas para aparecer
+    en el informe anual de programas.
+    """
+
+    organizaciones = OrganizacionDocente.objects.filter(
+        anio=anio,
+        activo=True,
+        incluir_en_informe_programas=True,
+    ).select_related(
+        "facultad",
+        "programa",
+        "docente",
+        "asignatura",
+    )
+
+    if facultad:
+        organizaciones = organizaciones.filter(facultad=facultad)
+
+    if periodo:
+        organizaciones = organizaciones.filter(
+            Q(semestre=periodo)
+            | Q(periodo_inicio_programa=periodo)
+            | Q(periodo_finalizacion_programa=periodo)
+        )
+
+    elif tipo_periodo != "TODO":
+        codigos_periodo = [
+            codigo for codigo, _ in periodos_para_ingresos(tipo_periodo)
+        ]
+
+        organizaciones = organizaciones.filter(
+            Q(semestre__in=codigos_periodo)
+            | Q(periodo_inicio_programa__in=codigos_periodo)
+            | Q(periodo_finalizacion_programa__in=codigos_periodo)
+        )
+
+    return organizaciones.order_by(
+        "facultad__nombre",
+        "programa__nombre",
+        "grupo_aula",
+    )
+
+
+def ingresos_por_programa_periodo(organizaciones, programa, periodo):
+    return organizaciones.filter(
+        programa=programa,
+        semestre=periodo,
+    ).aggregate(
+        total=Sum("total_ingresos")
+    ).get("total") or Decimal("0.00")
+
+
+def escribir_hoja_informe_programas(wb, anio, tipo_periodo, periodo, facultad):
+    ws = wb.active
+    ws.title = f"INFORME DE PROGRAMAS {anio}"
+
+    etiqueta = etiqueta_periodo_reporte(tipo_periodo, periodo)
+
+    organizaciones = obtener_organizaciones_informe_filtradas(
+        anio=anio,
+        tipo_periodo=tipo_periodo,
+        periodo=periodo,
+        facultad=facultad,
+    )
+
+    continuaron = organizaciones.filter(
+        estado_informe_programa="CONTINUA"
+    )
+
+    culminados = organizaciones.filter(
+        estado_informe_programa="CULMINADO"
+    )
+
+    iniciaron = organizaciones.filter(
+        estado_informe_programa="INICIADO"
+    )
+
+    fila = 1
+
+    fila = escribir_bloque_organizaciones_informe(
+        ws,
+        fila,
+        f"PROGRAMAS QUE CONTINUARON EN EL {anio} - {etiqueta}",
+        continuaron,
+        iniciado=False,
+    )
+
+    fila = escribir_bloque_organizaciones_informe(
+        ws,
+        fila,
+        f"PROGRAMAS CULMINADOS EN EL {anio} - {etiqueta}",
+        culminados,
+        iniciado=False,
+    )
+
+    fila = escribir_bloque_organizaciones_informe(
+        ws,
+        fila,
+        f"PROGRAMAS QUE INICIARON EN EL {anio} - {etiqueta}",
+        iniciaron,
+        iniciado=True,
+    )
+
+    ws.column_dimensions["A"].width = 8
+    ws.column_dimensions["B"].width = 22
+    ws.column_dimensions["C"].width = 55
+    ws.column_dimensions["D"].width = 18
+    ws.column_dimensions["E"].width = 25
+    ws.column_dimensions["F"].width = 25
+    ws.column_dimensions["G"].width = 25
+    ws.column_dimensions["H"].width = 18
+
+    for row in range(1, ws.max_row + 1):
+        ws.row_dimensions[row].height = 32
+
+    aplicar_estilo_informe_programas(ws)
+
+
+def escribir_hoja_ingresos_programa(wb, organizaciones, anio, tipo_periodo, periodo, facultad):
+    ws = wb.create_sheet("INGRESOS POR PROGRAMA")
+
+    periodos = periodos_para_ingresos(tipo_periodo)
+
+    if periodo:
+        periodos = [item for item in periodos if item[0] == periodo]
+
+    total_cols = len(periodos) + 3
+
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=total_cols)
+    ws.cell(row=1, column=1).value = "UNIVERSIDAD TECNOLÓGICA DE PANAMÁ"
+
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=total_cols)
+    ws.cell(row=2, column=1).value = "CENTRO REGIONAL DE CHIRIQUÍ"
+
+    ws.merge_cells(start_row=3, start_column=1, end_row=3, end_column=total_cols)
+    ws.cell(row=3, column=1).value = "COORDINACIÓN DE POSTGRADO"
+
+    ws.merge_cells(start_row=4, start_column=1, end_row=4, end_column=total_cols)
+    ws.cell(row=4, column=1).value = f"INFORME DE INGRESOS DE POSTGRADO - AÑO {anio}"
+
+    for row in range(1, 5):
+        ws.cell(row=row, column=1).font = Font(bold=True)
+        ws.cell(row=row, column=1).alignment = Alignment(horizontal="center")
+
+    ws.cell(row=6, column=1).value = "FACULTAD"
+    ws.cell(row=6, column=2).value = "PROGRAMA"
+    ws.cell(row=6, column=3).value = f"INGRESOS POR PROGRAMAS DE POSTGRADO - AÑO {anio} (B/.)"
+
+    ws.merge_cells(start_row=6, start_column=3, end_row=6, end_column=2 + len(periodos) + 1)
+
+    for col, (_, label) in enumerate(periodos, start=3):
+        ws.cell(row=7, column=col).value = label
+
+    total_col = 3 + len(periodos)
+    ws.cell(row=7, column=total_col).value = "TOTAL"
+
+    for row in [6, 7]:
+        for col in range(1, total_col + 1):
+            cell = ws.cell(row=row, column=col)
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill("solid", fgColor="D9EAF7")
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    programas = ProgramaPostgrado.objects.filter(
+        activo=True
+    ).select_related("facultad").order_by(
+        "facultad__nombre",
+        "nombre",
+    )
+
+    if facultad:
+        programas = programas.filter(facultad=facultad)
+
+    fila = 8
+    total_general_periodos = {codigo: Decimal("0.00") for codigo, _ in periodos}
+    total_general = Decimal("0.00")
+
+    facultad_actual = None
+    subtotal_periodos = {codigo: Decimal("0.00") for codigo, _ in periodos}
+    subtotal_total = Decimal("0.00")
+
+    def escribir_subtotal(nombre_facultad):
+        nonlocal fila, subtotal_periodos, subtotal_total
+
+        if not nombre_facultad:
+            return
+
+        ws.cell(row=fila, column=2).value = f"SUBTOTAL - {nombre_facultad}"
+        ws.cell(row=fila, column=2).font = Font(bold=True)
+
+        for idx, (codigo, _) in enumerate(periodos, start=3):
+            ws.cell(row=fila, column=idx).value = float(subtotal_periodos[codigo])
+            ws.cell(row=fila, column=idx).font = Font(bold=True)
+
+        ws.cell(row=fila, column=total_col).value = float(subtotal_total)
+        ws.cell(row=fila, column=total_col).font = Font(bold=True)
+
+        fila += 1
+
+        subtotal_periodos = {codigo: Decimal("0.00") for codigo, _ in periodos}
+        subtotal_total = Decimal("0.00")
+
+    for programa in programas:
+        nombre_facultad = programa.facultad.siglas or programa.facultad.nombre
+
+        if facultad_actual and facultad_actual != nombre_facultad:
+            escribir_subtotal(facultad_actual)
+
+        if facultad_actual != nombre_facultad:
+            ws.cell(row=fila, column=1).value = nombre_facultad
+            facultad_actual = nombre_facultad
+
+        ws.cell(row=fila, column=2).value = programa.nombre
+
+        total_programa = Decimal("0.00")
+
+        for idx, (codigo_periodo, _) in enumerate(periodos, start=3):
+            monto = ingresos_por_programa_periodo(
+                organizaciones,
+                programa,
+                codigo_periodo,
+            )
+
+            ws.cell(row=fila, column=idx).value = float(monto)
+
+            subtotal_periodos[codigo_periodo] += monto
+            total_general_periodos[codigo_periodo] += monto
+            total_programa += monto
+
+        ws.cell(row=fila, column=total_col).value = float(total_programa)
+
+        subtotal_total += total_programa
+        total_general += total_programa
+
+        fila += 1
+
+    escribir_subtotal(facultad_actual)
+
+    ws.cell(row=fila, column=2).value = "TOTAL DE INGRESOS*"
+    ws.cell(row=fila, column=2).font = Font(bold=True)
+
+    for idx, (codigo, _) in enumerate(periodos, start=3):
+        ws.cell(row=fila, column=idx).value = float(total_general_periodos[codigo])
+        ws.cell(row=fila, column=idx).font = Font(bold=True)
+
+    ws.cell(row=fila, column=total_col).value = float(total_general)
+    ws.cell(row=fila, column=total_col).font = Font(bold=True)
+
+    fila += 1
+
+    ws.cell(row=fila, column=1).value = (
+        "* Las cifras de ingresos mostradas son netas, luego de restar los gastos "
+        "de honorarios correspondientes"
+    )
+    ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=total_col)
+
+    for row in range(8, fila):
+        for col in range(3, total_col + 1):
+            ws.cell(row=row, column=col).number_format = '"B/." #,##0.00'
+
+    ws.column_dimensions["A"].width = 18
+    ws.column_dimensions["B"].width = 60
+
+    for col in range(3, total_col + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 16
+
+    for row in range(1, fila + 1):
+        ws.row_dimensions[row].height = 25
+
+    aplicar_estilo_informe_programas(ws)
+
+
+def generar_excel_informe_programas(anio, tipo_periodo="TODO", periodo="", facultad=None):
+    """
+    Genera Excel con dos hojas:
+    1. Informe de programas
+    2. Ingresos por programa
+    """
+
+    wb = Workbook()
+
+    organizaciones = OrganizacionDocente.objects.filter(
+        anio=anio,
+        activo=True,
+    ).select_related(
+        "facultad",
+        "programa",
+        "docente",
+        "asignatura",
+    )
+
+    if facultad:
+        organizaciones = organizaciones.filter(facultad=facultad)
+
+    if periodo:
+        organizaciones = organizaciones.filter(semestre=periodo)
+
+    escribir_hoja_informe_programas(
+        wb=wb,
+        anio=anio,
+        tipo_periodo=tipo_periodo,
+        periodo=periodo,
+        facultad=facultad,
+    )
+
+    escribir_hoja_ingresos_programa(
+        wb=wb,
+        organizaciones=organizaciones,
+        anio=anio,
+        tipo_periodo=tipo_periodo,
+        periodo=periodo,
+        facultad=facultad,
+    )
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"informe_programas_postgrado_{anio}_{tipo_periodo.lower()}.xlsx"
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
