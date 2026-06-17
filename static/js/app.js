@@ -189,7 +189,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     async function cargarDatosDocente(docenteId) {
-        if (!docenteId || !cedulaDocenteDisplay) return;
+        if (!cedulaDocenteDisplay) return;
+
+        if (!docenteId) {
+            cedulaDocenteDisplay.value = "";
+            return;
+        }
 
         try {
             const response = await fetch(`/ajax/docente/datos/?docente_id=${docenteId}`);

@@ -396,7 +396,7 @@ def generar_excel_reportes(organizaciones):
 
     for item in context["por_docente"]:
         ws_doc.append([
-            item["docente__nombre_completo"],
+            item["docente__nombre_completo"] or "Docente por asignar",
             item["cedula_docente"] or "",
             item["total"],
             float(decimal_0(item["total_horas"])),

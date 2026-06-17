@@ -1646,6 +1646,13 @@ def generar_nota_docente(request, pk):
         activo=True,
     )
 
+    if not organizacion.docente:
+        messages.error(
+            request,
+            "Debes asignar un docente antes de generar la nota."
+        )
+        return redirect("organizacion_detalle", pk=organizacion.pk)
+
     formato = request.GET.get("formato", "pdf").lower()
 
     if formato == "docx":

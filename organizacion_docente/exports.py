@@ -155,8 +155,8 @@ def crear_hoja_organizaciones(wb, organizaciones):
 
         fila = [
             org.numero_pago or "",
-            org.docente.nombre_completo,
-            org.cedula_docente or org.docente.cedula,
+            org.docente_nombre_display,
+            org.cedula_docente_display,
             *estados_valores,
             org.anio,
             org.get_semestre_display(),
@@ -240,8 +240,8 @@ def crear_hoja_estados(wb, organizaciones):
                 org.numero_pago or "",
                 org.anio,
                 org.get_semestre_display(),
-                org.docente.nombre_completo,
-                org.cedula_docente or org.docente.cedula,
+                org.docente_nombre_display,
+                org.cedula_docente_display,
                 org.programa.nombre,
                 org.asignatura.nombre,
                 estado.get_tipo_estado_display(),

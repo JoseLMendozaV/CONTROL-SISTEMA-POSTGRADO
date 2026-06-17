@@ -21,7 +21,7 @@
     <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 mb-6">
         {% if organizacion %}
             <p class="font-bold text-slate-800">{{ organizacion }}</p>
-            <p class="text-sm text-slate-500">{{ organizacion.docente.nombre_completo }} · {{ organizacion.asignatura.nombre }}</p>
+            <p class="text-sm text-slate-500">{{ organizacion.docente_nombre_display }} · {{ organizacion.asignatura.nombre }}</p>
         {% else %}
             <p class="font-bold text-slate-800">{{ objeto }}</p>
         {% endif %}

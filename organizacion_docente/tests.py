@@ -108,6 +108,18 @@ class FinanzasOrganizacionDocenteTests(SimpleTestCase):
             Decimal("400.00"),
         )
 
+    def test_organizacion_sin_docente_tiene_textos_fallback(self):
+        organizacion = OrganizacionDocente()
+
+        self.assertEqual(
+            organizacion.docente_nombre_display,
+            "Docente por asignar",
+        )
+        self.assertEqual(
+            organizacion.cedula_docente_display,
+            "-",
+        )
+
 
 class TratamientoDocenteTests(SimpleTestCase):
     def test_tratamiento_magister_masculino(self):

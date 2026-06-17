@@ -9,7 +9,7 @@
     <div>
         <h3 class="text-2xl font-black text-slate-800">{{ organizacion.asignatura.nombre }}</h3>
         <p class="text-sm text-slate-500">
-            {{ organizacion.docente.nombre_completo }} · {{ organizacion.get_semestre_display }} {{ organizacion.anio }}
+            {{ organizacion.docente_nombre_display }} · {{ organizacion.get_semestre_display }} {{ organizacion.anio }}
         </p>
     </div>
 
@@ -19,15 +19,17 @@
         </a>
 
 
-        <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=pdf"
-        class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
-            Nota PDF
-        </a>
+        {% if organizacion.docente %}
+            <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=pdf"
+            class="rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">
+                Nota PDF
+            </a>
 
-        <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=docx"
-        class="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700">
-            Nota Word
-        </a>
+            <a href="{% url 'generar_nota_docente' organizacion.pk %}?formato=docx"
+            class="rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700">
+                Nota Word
+            </a>
+        {% endif %}
 
 
         <a href="{% url 'generar_calendario_pago' organizacion.pk %}?formato=pdf"
@@ -116,12 +118,12 @@
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                     <dt class="text-slate-500">Docente</dt>
-                    <dd class="font-bold">{{ organizacion.docente.nombre_completo }}</dd>
+                    <dd class="font-bold">{{ organizacion.docente_nombre_display }}</dd>
                 </div>
 
                 <div>
                     <dt class="text-slate-500">Cédula</dt>
-                    <dd class="font-bold">{{ organizacion.cedula_docente }}</dd>
+                    <dd class="font-bold">{{ organizacion.cedula_docente_display }}</dd>
                 </div>
 
                 <div>

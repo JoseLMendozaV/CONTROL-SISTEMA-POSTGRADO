@@ -533,7 +533,7 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
 
     @admin.display(description="Docente", ordering="docente__nombre_completo")
     def docente_nombre(self, obj):
-        return obj.docente.nombre_completo
+        return obj.docente_nombre_display
 
     @admin.display(description="Asignatura", ordering="asignatura__nombre")
     def asignatura_nombre(self, obj):

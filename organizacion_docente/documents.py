@@ -203,6 +203,9 @@ def contexto_nota_docente(organizacion):
     Prepara el contexto de la nota al docente con el formato oficial.
     """
 
+    if not organizacion.docente:
+        raise ValueError("La organización docente no tiene docente asignado.")
+
     fecha_actual = timezone.localtime(timezone.now())
     encabezado_imagen_url = obtener_uri_static("img/encabezado_utp_chiriqui.png")
 
@@ -276,7 +279,7 @@ def contexto_nota_docente(organizacion):
 
 
 def nombre_archivo_nota(organizacion, extension):
-    docente = limpiar_nombre_archivo(organizacion.docente.nombre_completo)
+    docente = limpiar_nombre_archivo(organizacion.docente_nombre_display)
     asignatura = limpiar_nombre_archivo(organizacion.asignatura.nombre)
     fecha = timezone.localtime(timezone.now()).strftime("%Y%m%d_%H%M")
 
@@ -988,7 +991,7 @@ def contexto_calendario_pago(organizacion, cuotas=1):
         "codigo_horario": codigo_horario,
         "creditos": organizacion.total_creditos,
         "docente": organizacion.docente,
-        "docente_nombre": organizacion.docente.nombre_completo,
+        "docente_nombre": organizacion.docente_nombre_display,
 
         "fechas_clases": organizacion.fechas_clases or "Por definir",
         "horario": organizacion.horario or "Por definir",

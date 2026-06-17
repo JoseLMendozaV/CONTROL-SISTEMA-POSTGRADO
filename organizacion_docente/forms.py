@@ -684,6 +684,8 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         self.fields["docente"].queryset = Docente.objects.filter(
             activo=True
         ).select_related("facultad").order_by("nombre_completo")
+        self.fields["docente"].required = False
+        self.fields["docente"].empty_label = "Docente por asignar"
 
         self.fields["asignatura"].queryset = Asignatura.objects.filter(
             activo=True
@@ -699,7 +701,7 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         instance = getattr(self, "instance", None)
 
         if instance and instance.pk:
-            self.fields["cedula_docente_display"].initial = instance.cedula_docente or ""
+            self.fields["cedula_docente_display"].initial = instance.cedula_docente_display
             self.fields["codigo_asignatura_display"].initial = instance.codigo_asignatura or ""
             self.fields["codigo_horario_display"].initial = instance.codigo_horario or ""
             self.fields["utilidad_neta_display"].initial = f"B/. {instance.utilidad_neta:,.2f}"

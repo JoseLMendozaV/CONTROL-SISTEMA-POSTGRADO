@@ -300,6 +300,8 @@ class OrganizacionDocente(ModeloBase):
     docente = models.ForeignKey(
         Docente,
         on_delete=models.PROTECT,
+        blank=True,
+        null=True,
         related_name="organizaciones",
         verbose_name="Docente"
     )
@@ -762,7 +764,24 @@ class OrganizacionDocente(ModeloBase):
         ]
 
     def __str__(self):
-        return f"{self.anio} - {self.semestre} - {self.docente.nombre_completo} - {self.asignatura.nombre}"
+        return f"{self.anio} - {self.semestre} - {self.docente_nombre_display} - {self.asignatura.nombre}"
+
+    @property
+    def docente_nombre_display(self):
+        if self.docente:
+            return self.docente.nombre_completo
+
+        return "Docente por asignar"
+
+    @property
+    def cedula_docente_display(self):
+        if self.cedula_docente:
+            return self.cedula_docente
+
+        if self.docente:
+            return self.docente.cedula
+
+        return "-"
 
     def clean(self):
         """
@@ -789,6 +808,8 @@ class OrganizacionDocente(ModeloBase):
 
         if self.docente:
             self.cedula_docente = self.docente.cedula
+        else:
+            self.cedula_docente = None
 
         if self.asignatura:
             self.codigo_asignatura = self.asignatura.codigo_asignatura

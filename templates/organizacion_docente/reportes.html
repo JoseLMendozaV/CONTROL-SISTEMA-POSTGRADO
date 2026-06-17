@@ -311,7 +311,7 @@
                 <tbody class="divide-y divide-slate-100">
                     {% for item in por_docente %}
                         <tr>
-                            <td class="px-4 py-3 font-bold">{{ item.docente__nombre_completo }}</td>
+                            <td class="px-4 py-3 font-bold">{{ item.docente__nombre_completo|default:"Docente por asignar" }}</td>
                             <td class="px-4 py-3">{{ item.cedula_docente|default:"-" }}</td>
                             <td class="px-4 py-3">{{ item.total }}</td>
                             <td class="px-4 py-3">{{ item.total_horas|default_if_none:0 }}</td>
