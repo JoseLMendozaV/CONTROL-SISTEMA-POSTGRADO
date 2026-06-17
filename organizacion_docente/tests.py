@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from django.test import SimpleTestCase
 
-from .documents import calcular_fechas_calendario_estudiantes
+from .documents import calcular_fechas_calendario_estudiantes, texto_periodo_academico
 from .models import Docente, OrganizacionDocente
 
 
@@ -133,3 +133,11 @@ class TratamientoDocenteTests(SimpleTestCase):
         self.assertEqual(docente.tratamiento_destinatario, "Doctora")
         self.assertEqual(docente.saludo_respetado, "Respetada")
         self.assertEqual(docente.tratamiento_saludo, "doctora")
+
+
+class TextoPeriodoAcademicoTests(SimpleTestCase):
+    def test_muestra_cuatrimestre_completo(self):
+        self.assertEqual(
+            texto_periodo_academico("C3", 2026),
+            "tercer cuatrimestre de 2026",
+        )

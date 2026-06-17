@@ -94,6 +94,15 @@ def texto_periodo_academico(semestre, anio):
     if semestre == "ESPECIAL":
         return f"periodo especial de {anio}"
 
+    if semestre == "C1":
+        return f"primer cuatrimestre de {anio}"
+
+    if semestre == "C2":
+        return f"segundo cuatrimestre de {anio}"
+
+    if semestre == "C3":
+        return f"tercer cuatrimestre de {anio}"
+
     return f"{semestre} de {anio}"
 
 
