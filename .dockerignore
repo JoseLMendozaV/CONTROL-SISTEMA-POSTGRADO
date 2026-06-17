@@ -1,0 +1,16 @@
+.git
+.agents
+.codex
+.vscode
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.env
+.env.*
+db.sqlite3
+staticfiles
+media
+*.docx
+*.pdf

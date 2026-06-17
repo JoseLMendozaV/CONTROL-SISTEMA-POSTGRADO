@@ -1,17 +1,46 @@
 from pathlib import Path
 from decouple import config
+import dj_database_url
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def csv_config(name, default=""):
+    return [
+        value.strip()
+        for value in config(name, default=default).split(",")
+        if value.strip()
+    ]
+
 
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-dev-key")
 
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config(
-    "ALLOWED_HOSTS",
-    default="127.0.0.1,localhost"
-).split(",")
+ALLOWED_HOSTS = csv_config("ALLOWED_HOSTS", default="127.0.0.1,localhost")
+
+railway_public_domain = config("RAILWAY_PUBLIC_DOMAIN", default="")
+
+if railway_public_domain and railway_public_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(railway_public_domain)
+
+if not DEBUG:
+    ALLOWED_HOSTS.extend([
+        ".railway.app",
+        ".up.railway.app",
+    ])
+
+CSRF_TRUSTED_ORIGINS = csv_config("CSRF_TRUSTED_ORIGINS")
+
+if railway_public_domain:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{railway_public_domain}")
+
+if not DEBUG:
+    CSRF_TRUSTED_ORIGINS.extend([
+        "https://*.railway.app",
+        "https://*.up.railway.app",
+    ])
 
 INSTALLED_APPS = [
     # Django
@@ -28,6 +57,12 @@ INSTALLED_APPS = [
     # Apps propias
     "organizacion_docente",
 ]
+
+if config("CLOUDINARY_URL", default=""):
+    INSTALLED_APPS.extend([
+        "cloudinary",
+        "cloudinary_storage",
+    ])
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -67,9 +102,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+DATABASE_URL = config("DATABASE_URL", default="")
 DB_ENGINE = config("DB_ENGINE", default="django.db.backends.sqlite3")
 
-if DB_ENGINE == "django.db.backends.sqlite3":
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=config("DB_SSL_REQUIRE", default=False, cast=bool),
+        )
+    }
+elif DB_ENGINE == "django.db.backends.sqlite3":
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -93,17 +138,34 @@ TIME_ZONE = "America/Panama"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
-MEDIA_URL = "media/"
+if config("CLOUDINARY_URL", default=""):
+    STORAGES["default"] = {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    }
+
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=not DEBUG, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=not DEBUG, cast=bool)
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
