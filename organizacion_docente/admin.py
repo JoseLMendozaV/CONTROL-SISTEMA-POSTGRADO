@@ -169,6 +169,8 @@ class DocenteAdmin(admin.ModelAdmin):
     list_display = (
         "nombre_completo",
         "cedula",
+        "grado_academico",
+        "sexo",
         "correo",
         "telefono",
         "facultad",
@@ -177,6 +179,8 @@ class DocenteAdmin(admin.ModelAdmin):
     )
     list_filter = (
         "activo",
+        "sexo",
+        "grado_academico",
         ("facultad", admin.RelatedOnlyFieldListFilter),
     )
     search_fields = (

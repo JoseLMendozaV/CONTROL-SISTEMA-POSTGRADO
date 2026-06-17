@@ -98,6 +98,16 @@ class Docente(ModeloBase):
     Docente de postgrado.
     """
 
+    SEXO_CHOICES = [
+        ("M", "Hombre"),
+        ("F", "Mujer"),
+    ]
+
+    GRADO_ACADEMICO_CHOICES = [
+        ("MAGISTER", "Magíster"),
+        ("DOCTOR", "Doctor/a"),
+    ]
+
     facultad = models.ForeignKey(
         Facultad,
         on_delete=models.SET_NULL,
@@ -133,6 +143,18 @@ class Docente(ModeloBase):
         null=True,
         verbose_name="Especialidad"
     )
+    sexo = models.CharField(
+        max_length=1,
+        choices=SEXO_CHOICES,
+        default="M",
+        verbose_name="Sexo"
+    )
+    grado_academico = models.CharField(
+        max_length=20,
+        choices=GRADO_ACADEMICO_CHOICES,
+        default="MAGISTER",
+        verbose_name="Grado académico"
+    )
     activo = models.BooleanField(
         default=True,
         verbose_name="Activo"
@@ -145,6 +167,24 @@ class Docente(ModeloBase):
 
     def __str__(self):
         return f"{self.nombre_completo} - {self.cedula}"
+
+    @property
+    def tratamiento_destinatario(self):
+        if self.grado_academico == "DOCTOR":
+            return "Doctora" if self.sexo == "F" else "Doctor"
+
+        return "Magíster"
+
+    @property
+    def tratamiento_saludo(self):
+        if self.grado_academico == "DOCTOR":
+            return "doctora" if self.sexo == "F" else "doctor"
+
+        return "magíster"
+
+    @property
+    def saludo_respetado(self):
+        return "Respetada" if self.sexo == "F" else "Respetado"
 
 
 class Asignatura(ModeloBase):

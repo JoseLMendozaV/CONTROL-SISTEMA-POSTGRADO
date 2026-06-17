@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from django.test import SimpleTestCase
 
 from .documents import calcular_fechas_calendario_estudiantes
-from .models import OrganizacionDocente
+from .models import Docente, OrganizacionDocente
 
 
 class CalendarioPagoEstudiantesTests(SimpleTestCase):
@@ -107,3 +107,29 @@ class FinanzasOrganizacionDocenteTests(SimpleTestCase):
             organizacion.calcular_pago_docente(),
             Decimal("400.00"),
         )
+
+
+class TratamientoDocenteTests(SimpleTestCase):
+    def test_tratamiento_magister_masculino(self):
+        docente = Docente(
+            nombre_completo="Juan Perez",
+            cedula="1",
+            sexo="M",
+            grado_academico="MAGISTER",
+        )
+
+        self.assertEqual(docente.tratamiento_destinatario, "Magíster")
+        self.assertEqual(docente.saludo_respetado, "Respetado")
+        self.assertEqual(docente.tratamiento_saludo, "magíster")
+
+    def test_tratamiento_doctora_femenino(self):
+        docente = Docente(
+            nombre_completo="Ana Perez",
+            cedula="2",
+            sexo="F",
+            grado_academico="DOCTOR",
+        )
+
+        self.assertEqual(docente.tratamiento_destinatario, "Doctora")
+        self.assertEqual(docente.saludo_respetado, "Respetada")
+        self.assertEqual(docente.tratamiento_saludo, "doctora")

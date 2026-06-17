@@ -230,6 +230,9 @@ def contexto_nota_docente(organizacion):
         "nombre_docente": nombre_docente,
         "apellido_docente": obtener_apellido_docente(nombre_docente),
         "cedula_docente": cedula_docente,
+        "tratamiento_docente": organizacion.docente.tratamiento_destinatario,
+        "tratamiento_saludo_docente": organizacion.docente.tratamiento_saludo,
+        "saludo_respetado_docente": organizacion.docente.saludo_respetado,
 
         "facultad": organizacion.facultad,
         "programa": organizacion.programa,
@@ -383,14 +386,19 @@ def generar_docx_nota_docente(organizacion):
         space_after=28,
     )
 
-    agregar_parrafo_nota(documento, [("Magister", False)], space_after=1)
+    agregar_parrafo_nota(documento, [(context["tratamiento_docente"], False)], space_after=1)
     agregar_parrafo_nota(documento, [(context["nombre_docente"], False)], space_after=1)
     agregar_parrafo_nota(documento, [("Docente de Maestría", False)], space_after=1)
     agregar_parrafo_nota(documento, [("E. S. M.", False)], space_after=22)
 
     agregar_parrafo_nota(
         documento,
-        [(f"Respetado magister {context['apellido_docente']}:", False)],
+        [(
+            f"{context['saludo_respetado_docente']} "
+            f"{context['tratamiento_saludo_docente']} "
+            f"{context['apellido_docente']}:",
+            False,
+        )],
         space_after=18,
     )
 

@@ -29,6 +29,7 @@
         <thead class="bg-slate-50 text-left text-slate-500">
             <tr>
                 <th class="px-4 py-3">Docente</th>
+                <th class="px-4 py-3">Grado</th>
                 <th class="px-4 py-3">Cédula</th>
                 <th class="px-4 py-3">Correo</th>
                 <th class="px-4 py-3">Facultad</th>
@@ -40,6 +41,7 @@
             {% for item in docentes %}
                 <tr>
                     <td class="px-4 py-3 font-bold">{{ item.nombre_completo }}</td>
+                    <td class="px-4 py-3">{{ item.tratamiento_destinatario }}</td>
                     <td class="px-4 py-3">{{ item.cedula }}</td>
                     <td class="px-4 py-3">{{ item.correo|default:"-" }}</td>
                     <td class="px-4 py-3">{{ item.facultad|default:"-" }}</td>
@@ -56,7 +58,7 @@
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="6" class="px-4 py-8 text-center text-slate-500">No hay docentes registrados.</td>
+                    <td colspan="7" class="px-4 py-8 text-center text-slate-500">No hay docentes registrados.</td>
                 </tr>
             {% endfor %}
         </tbody>
