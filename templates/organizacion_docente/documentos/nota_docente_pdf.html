@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -113,7 +112,7 @@
 
     <!-- PÁGINA 1 -->
     {% if usar_encabezado_imagen %}
-        <img src="{% static 'img/encabezado_utp_chiriqui.png' %}" class="encabezado-img">
+        <img src="{{ encabezado_imagen_url }}" class="encabezado-img">
     {% else %}
         <div class="encabezado-texto">
             <h1>Universidad Tecnológica de Panamá</h1>

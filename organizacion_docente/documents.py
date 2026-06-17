@@ -1,5 +1,6 @@
 from io import BytesIO
 import calendar
+from pathlib import Path
 import re
 from decimal import Decimal
 
@@ -179,12 +180,22 @@ def agregar_encabezado_utp_docx(documento):
 
 
 
+def obtener_uri_static(nombre_archivo):
+    ruta = finders.find(nombre_archivo)
+
+    if not ruta:
+        return ""
+
+    return Path(ruta).resolve().as_uri()
+
+
 def contexto_nota_docente(organizacion):
     """
     Prepara el contexto de la nota al docente con el formato oficial.
     """
 
     fecha_actual = timezone.localtime(timezone.now())
+    encabezado_imagen_url = obtener_uri_static("img/encabezado_utp_chiriqui.png")
 
     nombre_docente = organizacion.docente.nombre_completo
     cedula_docente = organizacion.cedula_docente or organizacion.docente.cedula
@@ -247,9 +258,8 @@ def contexto_nota_docente(organizacion):
         "coordinador_postgrado": "Mgtr. José Mendoza",
         "iniciales": "JM/elc",
 
-        "usar_encabezado_imagen": bool(
-            finders.find("img/encabezado_utp_chiriqui.png")
-        ),
+        "encabezado_imagen_url": encabezado_imagen_url,
+        "usar_encabezado_imagen": bool(encabezado_imagen_url),
     }
 
 
