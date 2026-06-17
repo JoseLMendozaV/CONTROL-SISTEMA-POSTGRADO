@@ -170,7 +170,7 @@
             </h4>
             <p class="text-xs text-blue-700">
                 Estos campos se usarán para generar el calendario oficial de matrícula y pago.
-                Si los dejas vacíos, el sistema calculará fechas aproximadas usando la fecha base de matrícula.
+                Si los dejas vacíos, el sistema calculará fechas usando la matrícula, la última clase detectada y los cortes de quincena o fin de mes.
             </p>
         </div>
 
@@ -368,7 +368,12 @@
 </div>
 
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-        <h3 class="text-lg font-black text-slate-800 mb-5">Información financiera</h3>
+        <div class="mb-5">
+            <h3 class="text-lg font-black text-slate-800">Información financiera</h3>
+            <p class="text-sm text-slate-500 mt-1">
+                Se calcula con B/. 80.00 por crédito y pago docente por posición; si no hay posición, B/. 40.00 por hora.
+            </p>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -433,6 +438,104 @@
             </div>
         </div>
     {% endif %}
+
+
+    <!-- Reporte de posiciones -->
+<div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+    <div class="mb-6">
+        <h3 class="text-lg font-black text-slate-800">
+            Reporte de posiciones a utilizar
+        </h3>
+        <p class="text-sm text-slate-500 mt-1">
+            Completa esta sección si esta organización docente debe formar parte del informe de posiciones.
+        </p>
+    </div>
+
+    <div class="rounded-2xl bg-purple-50 border border-purple-200 p-4 mb-6">
+        <h4 class="text-sm font-black text-purple-900 mb-1">
+            Datos de posición
+        </h4>
+        <p class="text-xs text-purple-700">
+            El sistema tomará el año, periodo y facultad desde la organización docente.
+            Aquí defines el tipo de posición, cantidad asignada y cantidad a utilizar.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+
+        <div class="xl:col-span-4">
+            <label class="inline-flex items-center gap-2">
+                {{ form.incluir_en_reporte_posiciones }}
+                <span class="text-sm font-bold text-slate-700">
+                    {{ form.incluir_en_reporte_posiciones.label }}
+                </span>
+            </label>
+            {{ form.incluir_en_reporte_posiciones.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.tipo_posicion.label }}
+            </label>
+            {{ form.tipo_posicion }}
+            {{ form.tipo_posicion.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.origen_posicion.label }}
+            </label>
+            {{ form.origen_posicion }}
+            {{ form.origen_posicion.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.cantidad_posiciones_asignadas.label }}
+            </label>
+            {{ form.cantidad_posiciones_asignadas }}
+            {{ form.cantidad_posiciones_asignadas.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.cantidad_posiciones_a_utilizar.label }}
+            </label>
+            {{ form.cantidad_posiciones_a_utilizar }}
+            {{ form.cantidad_posiciones_a_utilizar.errors }}
+        </div>
+
+        <div>
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.monto_unitario_posicion.label }}
+            </label>
+            {{ form.monto_unitario_posicion }}
+            {{ form.monto_unitario_posicion.errors }}
+            <p class="text-xs text-slate-400 mt-1">
+                Opcional. Si lo dejas vacío, se usa el monto estándar del tipo de posición.
+            </p>
+        </div>
+
+        <div>
+            <label class="inline-flex items-center gap-2 mt-7">
+                {{ form.posicion_programa_nuevo }}
+                <span class="text-sm font-bold text-slate-700">
+                    {{ form.posicion_programa_nuevo.label }}
+                </span>
+            </label>
+            {{ form.posicion_programa_nuevo.errors }}
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="text-sm font-bold text-slate-700">
+                {{ form.observacion_posicion.label }}
+            </label>
+            {{ form.observacion_posicion }}
+            {{ form.observacion_posicion.errors }}
+        </div>
+
+    </div>
+</div>
 
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
         <h3 class="text-lg font-black text-slate-800 mb-5">Observaciones</h3>

@@ -321,6 +321,10 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
         "estado_informe_programa",
         "periodo_inicio_programa",
         "periodo_finalizacion_programa",
+        "incluir_en_reporte_posiciones",
+        "tipo_posicion",
+        "origen_posicion",
+        "posicion_programa_nuevo",
     )
 
     search_fields = (
@@ -462,6 +466,23 @@ class OrganizacionDocenteAdmin(admin.ModelAdmin):
                     "observaciones",
                     "creado_en",
                     "actualizado_en",
+                )
+            },
+        ),
+
+
+        (
+            "Reporte de posiciones a utilizar",
+            {
+                "fields": (
+                    "incluir_en_reporte_posiciones",
+                    "tipo_posicion",
+                    "origen_posicion",
+                    "cantidad_posiciones_asignadas",
+                    "cantidad_posiciones_a_utilizar",
+                    "monto_unitario_posicion",
+                    "posicion_programa_nuevo",
+                    "observacion_posicion",
                 )
             },
         ),

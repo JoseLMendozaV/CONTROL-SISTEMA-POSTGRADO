@@ -300,4 +300,10 @@ urlpatterns = [
     views.informe_programas_postgrado,
     name="informe_programas_postgrado",
     ),
+
+    path(
+    "reportes/posiciones/",
+    views.reporte_posiciones,
+    name="reporte_posiciones",
+    ),
 ]

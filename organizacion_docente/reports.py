@@ -16,6 +16,20 @@ from django.db.models import Count, Sum, Q
 from .models import OrganizacionDocente, ProgramaPostgrado
 
 
+from decimal import Decimal
+from io import BytesIO
+
+from django.db.models import Count, Sum, Q
+from django.http import HttpResponse
+from django.utils import timezone
+
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+from openpyxl.utils import get_column_letter
+
+from .models import OrganizacionDocente
+
+
 COLOR_PRIMARIO = "0F3D5E"
 COLOR_GRIS = "F1F5F9"
 COLOR_BLANCO = "FFFFFF"
@@ -997,6 +1011,499 @@ def generar_excel_informe_programas(anio, tipo_periodo="TODO", periodo="", facul
     output.seek(0)
 
     filename = f"informe_programas_postgrado_{anio}_{tipo_periodo.lower()}.xlsx"
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    return response
+
+
+
+# ============================================================
+# Reporte de posiciones a utilizar
+# ============================================================
+
+def etiqueta_periodo_posicion(codigo, anio):
+    etiquetas = {
+        "VERANO": f"Verano-{anio}",
+        "I": f"I Sem -{anio}",
+        "II": f"II Sem-{anio}",
+        "T1": f"I Trim-{anio}",
+        "T2": f"II Trim-{anio}",
+        "T3": f"III Trim-{anio}",
+        "T4": f"IV Trim-{anio}",
+        "C1": f"I Cuat-{anio}",
+        "C2": f"II Cuat-{anio}",
+        "C3": f"III Cuat-{anio}",
+        "ESPECIAL": f"Especial-{anio}",
+    }
+
+    return etiquetas.get(codigo, f"{codigo}-{anio}")
+
+
+def etiqueta_total_periodo_posicion(codigo, anio):
+    etiquetas = {
+        "VERANO": f"Total Verano {anio}",
+        "I": f"Total I Sem-{anio}",
+        "II": f"Total II Sem-{anio}",
+        "T1": f"Total I Trim-{anio}",
+        "T2": f"Total II Trim-{anio}",
+        "T3": f"Total III Trim-{anio}",
+        "T4": f"Total IV Trim-{anio}",
+        "C1": f"Total I Cuat-{anio}",
+        "C2": f"Total II Cuat-{anio}",
+        "C3": f"Total III Cuat-{anio}",
+        "ESPECIAL": f"Total Especial-{anio}",
+    }
+
+    return etiquetas.get(codigo, f"Total {codigo}-{anio}")
+
+
+def orden_periodos_posiciones():
+    return [
+        "VERANO",
+        "I",
+        "II",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "C1",
+        "C2",
+        "C3",
+        "ESPECIAL",
+    ]
+
+
+def monto_posicion_por_tipo(tipo_posicion):
+    valores = {
+        "16": Decimal("640.00"),
+        "32": Decimal("1280.00"),
+        "48": Decimal("1920.00"),
+        "64": Decimal("2560.00"),
+    }
+
+    return valores.get(str(tipo_posicion), Decimal("0.00"))
+
+
+def obtener_organizaciones_posiciones(anio, periodo="", facultad=None):
+    organizaciones = OrganizacionDocente.objects.filter(
+        anio=anio,
+        activo=True,
+        incluir_en_reporte_posiciones=True,
+    ).select_related(
+        "facultad",
+        "programa",
+        "docente",
+        "asignatura",
+    )
+
+    if periodo:
+        organizaciones = organizaciones.filter(semestre=periodo)
+
+    if facultad:
+        organizaciones = organizaciones.filter(facultad=facultad)
+
+    return organizaciones.order_by(
+        "semestre",
+        "facultad__nombre",
+        "programa__nombre",
+    )
+
+
+def construir_resumen_posiciones(organizaciones):
+    resumen = {}
+
+    for org in organizaciones:
+        periodo = org.semestre
+        facultad = org.facultad_reporte_posicion
+        tipo = str(org.tipo_posicion or "")
+
+        if not tipo:
+            continue
+
+        key = (periodo, facultad)
+
+        if key not in resumen:
+            resumen[key] = {
+                "16": 0,
+                "32": 0,
+                "48": 0,
+                "64": 0,
+            }
+
+        resumen[key][tipo] += org.cantidad_posiciones_a_utilizar or 0
+
+    return resumen
+
+
+def escribir_celda_posiciones(ws, fila, col, valor, bold=False, fill=None, align="center"):
+    cell = ws.cell(row=fila, column=col)
+    cell.value = valor
+    cell.alignment = Alignment(
+        horizontal=align,
+        vertical="center",
+        wrap_text=True,
+    )
+
+    if bold:
+        cell.font = Font(bold=True)
+
+    if fill:
+        cell.fill = PatternFill("solid", fgColor=fill)
+
+    return cell
+
+
+def aplicar_estilo_posiciones(ws):
+    thin = Side(style="thin", color="000000")
+    borde = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for row in ws.iter_rows():
+        for cell in row:
+            cell.border = borde
+            cell.alignment = Alignment(
+                vertical="center",
+                wrap_text=True,
+            )
+
+    ws.sheet_view.showGridLines = False
+
+
+def generar_excel_reporte_posiciones(anio, periodo="", facultad=None):
+    organizaciones = obtener_organizaciones_posiciones(
+        anio=anio,
+        periodo=periodo,
+        facultad=facultad,
+    )
+
+    resumen = construir_resumen_posiciones(organizaciones)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"POSICIONES UTILIZADAS {anio}"
+
+    # Títulos
+    ws.merge_cells("A1:K1")
+    ws.merge_cells("A2:K2")
+    ws.merge_cells("A3:K3")
+
+    escribir_celda_posiciones(
+        ws,
+        1,
+        1,
+        "UNIVERSIDAD TECNOLÓGICA DE PANAMÁ",
+        bold=True,
+    )
+    escribir_celda_posiciones(
+        ws,
+        2,
+        1,
+        "CENTRO REGIONAL DE CHIRIQUÍ",
+        bold=True,
+    )
+    escribir_celda_posiciones(
+        ws,
+        3,
+        1,
+        f"POSICIONES A UTILIZAR EN EL {anio}",
+        bold=True,
+    )
+
+    # Encabezado principal
+    headers_row_4 = [
+        "PERIODO",
+        "FACULTAD",
+        "POSICIONES (B/.)",
+        "Total B/.",
+        "",
+        "Total B/.",
+        "",
+        "Total B/.",
+        "",
+        "Total B/.",
+        "TOTAL B/.",
+    ]
+
+    headers_row_5 = [
+        "",
+        "",
+        640,
+        "",
+        1280,
+        "",
+        1920,
+        "",
+        2560,
+        "",
+        "",
+    ]
+
+    headers_row_6 = [
+        "",
+        "",
+        "(16 horas)",
+        "",
+        "(32 horas)",
+        "",
+        "(48 horas)",
+        "",
+        "(64 horas)",
+        "",
+        "",
+    ]
+
+    for col, value in enumerate(headers_row_4, start=1):
+        escribir_celda_posiciones(ws, 4, col, value, bold=True, fill="D9EAD3")
+
+    for col, value in enumerate(headers_row_5, start=1):
+        escribir_celda_posiciones(ws, 5, col, value, bold=True, fill="D9EAD3")
+
+    for col, value in enumerate(headers_row_6, start=1):
+        escribir_celda_posiciones(ws, 6, col, value, bold=True, fill="D9EAD3")
+
+    fila = 7
+
+    total_general = {
+        "16": 0,
+        "32": 0,
+        "48": 0,
+        "64": 0,
+    }
+
+    periodos = orden_periodos_posiciones()
+
+    if periodo:
+        periodos = [periodo]
+
+    for codigo_periodo in periodos:
+        filas_periodo = [
+            (per, fac, datos)
+            for (per, fac), datos in resumen.items()
+            if per == codigo_periodo
+        ]
+
+        if not filas_periodo:
+            continue
+
+        subtotal_periodo = {
+            "16": 0,
+            "32": 0,
+            "48": 0,
+            "64": 0,
+        }
+
+        for per, fac, datos in sorted(filas_periodo, key=lambda x: x[1]):
+            etiqueta_periodo = etiqueta_periodo_posicion(per, anio)
+
+            total_16 = datos["16"] * 640
+            total_32 = datos["32"] * 1280
+            total_48 = datos["48"] * 1920
+            total_64 = datos["64"] * 2560
+            total_fila = total_16 + total_32 + total_48 + total_64
+
+            valores = [
+                etiqueta_periodo,
+                fac,
+                datos["16"],
+                total_16,
+                datos["32"],
+                total_32,
+                datos["48"],
+                total_48,
+                datos["64"],
+                total_64,
+                total_fila,
+            ]
+
+            for col, value in enumerate(valores, start=1):
+                align = "left" if col in [1, 2] else "center"
+                escribir_celda_posiciones(ws, fila, col, value, align=align)
+
+            for tipo in ["16", "32", "48", "64"]:
+                subtotal_periodo[tipo] += datos[tipo]
+                total_general[tipo] += datos[tipo]
+
+            fila += 1
+
+        total_16 = subtotal_periodo["16"] * 640
+        total_32 = subtotal_periodo["32"] * 1280
+        total_48 = subtotal_periodo["48"] * 1920
+        total_64 = subtotal_periodo["64"] * 2560
+        total_periodo = total_16 + total_32 + total_48 + total_64
+
+        valores_total = [
+            etiqueta_total_periodo_posicion(codigo_periodo, anio),
+            f"TOTAL - {etiqueta_periodo_posicion(codigo_periodo, anio).upper()}",
+            subtotal_periodo["16"],
+            total_16,
+            subtotal_periodo["32"],
+            total_32,
+            subtotal_periodo["48"],
+            total_48,
+            subtotal_periodo["64"],
+            total_64,
+            total_periodo,
+        ]
+
+        for col, value in enumerate(valores_total, start=1):
+            align = "left" if col in [1, 2] else "center"
+            escribir_celda_posiciones(
+                ws,
+                fila,
+                col,
+                value,
+                bold=True,
+                fill="FFF2CC",
+                align=align,
+            )
+
+        fila += 1
+
+    # Total anual
+    total_16 = total_general["16"] * 640
+    total_32 = total_general["32"] * 1280
+    total_48 = total_general["48"] * 1920
+    total_64 = total_general["64"] * 2560
+    total_anual = total_16 + total_32 + total_48 + total_64
+
+    valores_anual = [
+        f"TOTAL - {anio}",
+        "",
+        total_general["16"],
+        total_16,
+        total_general["32"],
+        total_32,
+        total_general["48"],
+        total_48,
+        total_general["64"],
+        total_64,
+        total_anual,
+    ]
+
+    for col, value in enumerate(valores_anual, start=1):
+        align = "left" if col in [1, 2] else "center"
+        escribir_celda_posiciones(
+            ws,
+            fila,
+            col,
+            value,
+            bold=True,
+            fill="D9EAD3",
+            align=align,
+        )
+
+    fila += 2
+
+    # Resumen inferior
+    posiciones_solicitadas = sum(
+        org.cantidad_posiciones_asignadas or 0
+        for org in organizaciones
+        if org.origen_posicion == "SOLICITADA"
+    )
+
+    monto_solicitadas = sum(
+        Decimal(org.cantidad_posiciones_asignadas or 0) * Decimal(org.monto_base_posicion or 0)
+        for org in organizaciones
+        if org.origen_posicion == "SOLICITADA"
+    )
+
+    posiciones_reasignadas = sum(
+        org.cantidad_posiciones_asignadas or 0
+        for org in organizaciones
+        if org.origen_posicion == "REASIGNADA"
+    )
+
+    monto_reasignadas = sum(
+        Decimal(org.cantidad_posiciones_asignadas or 0) * Decimal(org.monto_base_posicion or 0)
+        for org in organizaciones
+        if org.origen_posicion == "REASIGNADA"
+    )
+
+    total_asignadas = posiciones_solicitadas + posiciones_reasignadas
+    monto_total_asignadas = monto_solicitadas + monto_reasignadas
+
+    posiciones_utilizar = sum(
+        org.cantidad_posiciones_a_utilizar or 0
+        for org in organizaciones
+    )
+
+    monto_utilizar = sum(
+        Decimal(org.cantidad_posiciones_a_utilizar or 0) * Decimal(org.monto_base_posicion or 0)
+        for org in organizaciones
+    )
+
+    posiciones_sin_utilizar = total_asignadas - posiciones_utilizar
+    monto_sin_utilizar = monto_total_asignadas - monto_utilizar
+
+    escribir_celda_posiciones(ws, fila, 2, "Cant. Posiciones", bold=True)
+    escribir_celda_posiciones(ws, fila, 3, "Cantidad B/.", bold=True)
+
+    escribir_celda_posiciones(
+        ws,
+        fila,
+        6,
+        "* Las posiciones a utilizar incluyen:",
+        bold=True,
+        align="left",
+    )
+
+    fila += 1
+
+    resumen_final = [
+        ["Posiciones solicitadas", posiciones_solicitadas, float(monto_solicitadas)],
+        ["Posiciones reasignadas", posiciones_reasignadas, float(monto_reasignadas)],
+        ["Total de posiciones asignadas", total_asignadas, float(monto_total_asignadas)],
+        [f"Posiciones a Utilizar - Año {anio} *", posiciones_utilizar, float(monto_utilizar)],
+        ["Posiciones sin utilizar", posiciones_sin_utilizar, float(monto_sin_utilizar)],
+    ]
+
+    detalle_tipos = [
+        f"{total_general['16']} posiciones de 16 horas (B/. 640.00)",
+        f"{total_general['32']} posiciones de 32 horas (B/. 1,280.00)",
+        f"{total_general['48']} posiciones de 48 horas (B/. 1,920.00)",
+        f"{total_general['64']} posiciones de 64 horas (B/. 2,560.00)",
+        "** Posiciones de programas nuevos",
+    ]
+
+    for index, row in enumerate(resumen_final):
+        escribir_celda_posiciones(ws, fila, 1, row[0], align="left")
+        escribir_celda_posiciones(ws, fila, 2, row[1])
+        escribir_celda_posiciones(ws, fila, 3, row[2])
+        escribir_celda_posiciones(ws, fila, 6, detalle_tipos[index], align="left")
+        fila += 1
+
+    # Formatos
+    for row in range(7, fila + 1):
+        for col in [4, 6, 8, 10, 11, 3]:
+            ws.cell(row=row, column=col).number_format = '"B/." #,##0.00'
+
+    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["B"].width = 24
+    ws.column_dimensions["C"].width = 16
+    ws.column_dimensions["D"].width = 16
+    ws.column_dimensions["E"].width = 16
+    ws.column_dimensions["F"].width = 16
+    ws.column_dimensions["G"].width = 16
+    ws.column_dimensions["H"].width = 16
+    ws.column_dimensions["I"].width = 16
+    ws.column_dimensions["J"].width = 16
+    ws.column_dimensions["K"].width = 16
+
+    for row in range(1, fila + 1):
+        ws.row_dimensions[row].height = 24
+
+    aplicar_estilo_posiciones(ws)
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    filename = f"reporte_posiciones_a_utilizar_{anio}.xlsx"
 
     response = HttpResponse(
         output.getvalue(),

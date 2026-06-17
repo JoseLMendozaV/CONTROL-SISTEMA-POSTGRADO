@@ -21,6 +21,11 @@
             Informe programas
         </a>
 
+        <a href="{% url 'reporte_posiciones' %}"
+            class="rounded-xl bg-purple-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-purple-800">
+            Reporte posiciones
+        </a>
+
         <a href="{% url 'reportes_exportar_excel' %}{% if querystring %}?{{ querystring }}{% endif %}"
            class="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-green-700">
             Exportar Excel

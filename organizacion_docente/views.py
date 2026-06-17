@@ -32,6 +32,7 @@ from .forms import (
     OrganizacionDocenteFiltroForm,
     PlantillaDocumentoForm,
     InformeProgramasFiltroForm,
+    ReportePosicionesFiltroForm,
 )
 
 from .models import (
@@ -49,6 +50,7 @@ from .reports import (
     generar_excel_reportes,
     generar_pdf_reportes,
     generar_excel_informe_programas,
+    generar_excel_reporte_posiciones,
 )
 
 
@@ -1970,5 +1972,40 @@ def informe_programas_postgrado(request):
     return render(
         request,
         "organizacion_docente/informe_programas.html",
+        context,
+    )
+
+
+@login_required
+def reporte_posiciones(request):
+    """
+    Genera el reporte de posiciones a utilizar.
+    """
+
+    initial = {
+        "anio": timezone.now().year,
+    }
+
+    form = ReportePosicionesFiltroForm(request.GET or None, initial=initial)
+
+    if request.GET and form.is_valid():
+        anio = form.cleaned_data["anio"]
+        periodo = form.cleaned_data.get("periodo") or ""
+        facultad = form.cleaned_data.get("facultad")
+
+        return generar_excel_reporte_posiciones(
+            anio=anio,
+            periodo=periodo,
+            facultad=facultad,
+        )
+
+    context = {
+        "titulo": "Reporte de Posiciones",
+        "form": form,
+    }
+
+    return render(
+        request,
+        "organizacion_docente/reporte_posiciones.html",
         context,
     )

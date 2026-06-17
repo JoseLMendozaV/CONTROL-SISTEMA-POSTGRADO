@@ -194,8 +194,12 @@
 
             <tr>
                 <td>
-                    • Pago total con descuento del 5% o Primer<br>
-                    &nbsp;&nbsp;Tercio de la Matrícula
+                    {% if pago_unico %}
+                        • Pago único de la matrícula
+                    {% else %}
+                        • Pago total con descuento del 5% o Primer<br>
+                        &nbsp;&nbsp;Tercio de la Matrícula
+                    {% endif %}
                 </td>
                 <td>{{ primer_pago }}</td>
             </tr>

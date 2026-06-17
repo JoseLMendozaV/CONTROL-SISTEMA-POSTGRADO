@@ -13,6 +13,87 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalHorasInput = document.getElementById("id_total_horas");
     const totalCreditosInput = document.getElementById("id_total_creditos");
     const totalLaboratorioInput = document.getElementById("id_total_laboratorio");
+    const cantidadEstudiantesInput = document.getElementById("id_cantidad_estudiantes_matriculados");
+    const totalNoExoneradosInput = document.getElementById("id_total_no_exonerados");
+    const exoneracion50Input = document.getElementById("id_cantidad_exoneracion_50");
+    const exoneracion25Input = document.getElementById("id_cantidad_exoneracion_25");
+    const totalIngresosInput = document.getElementById("id_total_ingresos");
+    const pagoDocenteInput = document.getElementById("id_pago_docente");
+    const utilidadNetaInput = document.getElementById("id_utilidad_neta_display");
+    const tipoPosicionSelect = document.getElementById("id_tipo_posicion");
+    const montoUnitarioPosicionInput = document.getElementById("id_monto_unitario_posicion");
+    const cantidadPosicionesUtilizarInput = document.getElementById("id_cantidad_posiciones_a_utilizar");
+
+    const COSTO_CREDITO = 80;
+    const TARIFA_HORA_DOCENTE = 40;
+    const MONTOS_POSICION = {
+        "16": 640,
+        "32": 1280,
+        "48": 1920,
+        "64": 2560,
+    };
+
+    function numeroCampo(input) {
+        if (!input) return 0;
+
+        const valor = parseFloat(String(input.value || "0").replace(",", "."));
+        return Number.isFinite(valor) ? valor : 0;
+    }
+
+    function formatoDecimal(valor) {
+        return Number(valor || 0).toFixed(2);
+    }
+
+    function formatoMoneda(valor) {
+        return `B/. ${Number(valor || 0).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
+    }
+
+    function estudiantesEquivalentesPago() {
+        const estudiantes = numeroCampo(cantidadEstudiantesInput);
+        const noExonerados = numeroCampo(totalNoExoneradosInput);
+        const exonerados50 = numeroCampo(exoneracion50Input) * 0.5;
+        const exonerados25 = numeroCampo(exoneracion25Input) * 0.75;
+        const totalEquivalente = noExonerados + exonerados50 + exonerados25;
+
+        return totalEquivalente > 0 ? totalEquivalente : estudiantes;
+    }
+
+    function calcularTotalIngresos() {
+        return numeroCampo(totalCreditosInput) * COSTO_CREDITO * estudiantesEquivalentesPago();
+    }
+
+    function calcularPagoDocente() {
+        const montoManualPosicion = numeroCampo(montoUnitarioPosicionInput);
+        const tipoPosicion = tipoPosicionSelect ? tipoPosicionSelect.value : "";
+        const montoPosicion = montoManualPosicion || MONTOS_POSICION[tipoPosicion] || 0;
+
+        if (montoPosicion > 0) {
+            const cantidadPosiciones = numeroCampo(cantidadPosicionesUtilizarInput) || 1;
+            return montoPosicion * cantidadPosiciones;
+        }
+
+        return numeroCampo(totalHorasInput) * TARIFA_HORA_DOCENTE;
+    }
+
+    function calcularFinanzas() {
+        const totalIngresos = calcularTotalIngresos();
+        const pagoDocente = calcularPagoDocente();
+
+        if (totalIngresosInput) {
+            totalIngresosInput.value = formatoDecimal(totalIngresos);
+        }
+
+        if (pagoDocenteInput) {
+            pagoDocenteInput.value = formatoDecimal(pagoDocente);
+        }
+
+        if (utilidadNetaInput) {
+            utilidadNetaInput.value = formatoMoneda(totalIngresos - pagoDocente);
+        }
+    }
 
     function limpiarSelect(select, textoInicial) {
         if (!select) return;
@@ -146,6 +227,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (totalLaboratorioInput && data.total_laboratorio) {
                 totalLaboratorioInput.value = data.total_laboratorio;
             }
+
+            calcularFinanzas();
         } catch (error) {
             console.error("Error cargando datos de asignatura:", error);
         }
@@ -180,4 +263,22 @@ document.addEventListener("DOMContentLoaded", function () {
             cargarDatosAsignatura(asignaturaId);
         });
     }
+
+    [
+        totalHorasInput,
+        totalCreditosInput,
+        cantidadEstudiantesInput,
+        totalNoExoneradosInput,
+        exoneracion50Input,
+        exoneracion25Input,
+        tipoPosicionSelect,
+        montoUnitarioPosicionInput,
+        cantidadPosicionesUtilizarInput,
+    ].forEach(function (input) {
+        if (!input) return;
+        input.addEventListener("input", calcularFinanzas);
+        input.addEventListener("change", calcularFinanzas);
+    });
+
+    calcularFinanzas();
 });

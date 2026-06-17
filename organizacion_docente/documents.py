@@ -1,4 +1,5 @@
 from io import BytesIO
+import calendar
 import re
 from decimal import Decimal
 
@@ -13,7 +14,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from django.contrib.staticfiles import finders
 
 
-from datetime import timedelta
+from datetime import date, timedelta
 from docx.shared import RGBColor
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
 from docx.oxml import OxmlElement
@@ -44,6 +45,22 @@ MESES_ES = {
     10: "octubre",
     11: "noviembre",
     12: "diciembre",
+}
+
+MESES_ES_NUMERO = {
+    "enero": 1,
+    "febrero": 2,
+    "marzo": 3,
+    "abril": 4,
+    "mayo": 5,
+    "junio": 6,
+    "julio": 7,
+    "agosto": 8,
+    "septiembre": 9,
+    "setiembre": 9,
+    "octubre": 10,
+    "noviembre": 11,
+    "diciembre": 12,
 }
 
 
@@ -650,6 +667,9 @@ def formatear_rango_fechas(inicio, fin):
     if not inicio or not fin:
         return "Por definir"
 
+    if inicio == fin:
+        return formatear_fecha_calendario(inicio)
+
     if inicio.month == fin.month and inicio.year == fin.year:
         return (
             f"Del {inicio.day} al {fin.day} de "
@@ -662,16 +682,191 @@ def formatear_rango_fechas(inicio, fin):
     )
 
 
+def normalizar_mes(texto):
+    reemplazos = {
+        "á": "a",
+        "é": "e",
+        "í": "i",
+        "ó": "o",
+        "ú": "u",
+    }
+
+    texto = (texto or "").strip().lower()
+
+    for origen, destino in reemplazos.items():
+        texto = texto.replace(origen, destino)
+
+    return texto
+
+
+def crear_fecha_segura(anio, mes, dia):
+    try:
+        return date(int(anio), int(mes), int(dia))
+    except (TypeError, ValueError):
+        return None
+
+
+def extraer_fechas_desde_texto(texto):
+    """
+    Extrae fechas comunes en español para poder detectar la última clase.
+    """
+
+    fechas = []
+    texto = texto or ""
+
+    for dia, mes, anio in re.findall(r"\b(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})\b", texto):
+        if len(anio) == 2:
+            anio = f"20{anio}"
+
+        fecha = crear_fecha_segura(anio, mes, dia)
+
+        if fecha:
+            fechas.append(fecha)
+
+    patron_fecha_texto = re.compile(
+        r"\b(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de|,)?\s+(\d{4})\b",
+        re.IGNORECASE,
+    )
+
+    for dia, mes_texto, anio in patron_fecha_texto.findall(texto):
+        mes = MESES_ES_NUMERO.get(normalizar_mes(mes_texto))
+        fecha = crear_fecha_segura(anio, mes, dia)
+
+        if fecha:
+            fechas.append(fecha)
+
+    patron_rango = re.compile(
+        r"\b(?:del\s+)?(\d{1,2})\s+de\s+([a-záéíóúñ]+)"
+        r"(?:\s+de\s+(\d{4}))?\s+al\s+"
+        r"(\d{1,2})\s+de\s+([a-záéíóúñ]+)"
+        r"(?:\s+de\s+(\d{4}))?",
+        re.IGNORECASE,
+    )
+
+    for dia_inicio, mes_inicio, anio_inicio, dia_fin, mes_fin, anio_fin in patron_rango.findall(texto):
+        anio = anio_fin or anio_inicio
+
+        if not anio:
+            continue
+
+        mes_inicio_num = MESES_ES_NUMERO.get(normalizar_mes(mes_inicio))
+        mes_fin_num = MESES_ES_NUMERO.get(normalizar_mes(mes_fin))
+
+        fecha_inicio = crear_fecha_segura(anio, mes_inicio_num, dia_inicio)
+        fecha_fin = crear_fecha_segura(anio, mes_fin_num, dia_fin)
+
+        if fecha_inicio:
+            fechas.append(fecha_inicio)
+
+        if fecha_fin:
+            fechas.append(fecha_fin)
+
+    return fechas
+
+
+def obtener_ultima_fecha_clase(organizacion):
+    fechas = extraer_fechas_desde_texto(organizacion.fechas_clases)
+
+    if organizacion.fecha_matricula:
+        fechas = [
+            fecha
+            for fecha in fechas
+            if fecha >= organizacion.fecha_matricula
+        ]
+
+    if not fechas:
+        return None
+
+    return max(fechas)
+
+
+def fin_de_mes(fecha):
+    ultimo_dia = calendar.monthrange(fecha.year, fecha.month)[1]
+    return fecha.replace(day=ultimo_dia)
+
+
+def cierre_quincena_o_mes(fecha):
+    if fecha.day <= 15:
+        return fecha.replace(day=15)
+
+    return fin_de_mes(fecha)
+
+
+def calcular_periodos_pago(fecha_inicio, fecha_fin):
+    if not fecha_inicio:
+        return []
+
+    if not fecha_fin or fecha_fin < fecha_inicio:
+        fecha_fin = fecha_inicio + timedelta(days=40)
+
+    total_dias = (fecha_fin - fecha_inicio).days + 1
+
+    primer_tercio_dias = (total_dias + 2) // 3
+    segundo_tercio_dias = ((total_dias * 2) + 2) // 3
+
+    primer_objetivo = fecha_inicio + timedelta(
+        days=max(primer_tercio_dias - 1, 0)
+    )
+    segundo_objetivo = fecha_inicio + timedelta(
+        days=max(segundo_tercio_dias - 1, 0)
+    )
+
+    primer_fin = min(cierre_quincena_o_mes(primer_objetivo), fecha_fin)
+    segundo_inicio = min(primer_fin + timedelta(days=1), fecha_fin)
+    segundo_objetivo = max(segundo_objetivo, segundo_inicio)
+    segundo_fin = min(cierre_quincena_o_mes(segundo_objetivo), fecha_fin)
+    tercer_inicio = min(segundo_fin + timedelta(days=1), fecha_fin)
+
+    return [
+        (fecha_inicio, primer_fin),
+        (segundo_inicio, segundo_fin),
+        (tercer_inicio, fecha_fin),
+    ]
+
+
+def es_materia_un_credito(organizacion):
+    try:
+        return Decimal(organizacion.total_creditos or 0) == Decimal("1.00")
+    except (TypeError, ValueError):
+        return False
+
+
+def calcular_periodos_retiro(fecha_inicio, fecha_fin):
+    if not fecha_inicio:
+        return {
+            "retiro_inclusion": None,
+            "retiro_fuera": None,
+        }
+
+    if not fecha_fin or fecha_fin < fecha_inicio:
+        fecha_fin = fecha_inicio + timedelta(days=40)
+
+    inclusion_inicio = min(fecha_inicio + timedelta(days=5), fecha_fin)
+    inclusion_fin = min(inclusion_inicio + timedelta(days=6), fecha_fin)
+
+    retiro_fuera_inicio = min(inclusion_fin + timedelta(days=1), fecha_fin)
+    retiro_fuera_fin = max(retiro_fuera_inicio, fecha_fin - timedelta(days=3))
+
+    return {
+        "retiro_inclusion": (inclusion_inicio, inclusion_fin),
+        "retiro_fuera": (retiro_fuera_inicio, retiro_fuera_fin),
+    }
+
+
 def calcular_fechas_calendario_estudiantes(organizacion):
     """
     Obtiene las fechas del calendario de matrícula y pago.
 
     Prioridad:
     1. Usa los campos de texto escritos manualmente.
-    2. Si están vacíos, calcula fechas automáticas desde fecha_matricula.
+    2. Si están vacíos, calcula fechas automáticas desde fecha_matricula
+       hasta la última fecha de clases detectada, usando cierres de quincena
+       y fin de mes para los tercios.
     """
 
     fecha_base = organizacion.fecha_matricula
+    fecha_ultima_clase = obtener_ultima_fecha_clase(organizacion)
+    pago_unico = es_materia_un_credito(organizacion)
 
     fechas_auto = {
         "matricula": "Por definir",
@@ -683,31 +878,40 @@ def calcular_fechas_calendario_estudiantes(organizacion):
     }
 
     if fecha_base:
+        periodos_pago = calcular_periodos_pago(fecha_base, fecha_ultima_clase)
+        periodos_retiro = calcular_periodos_retiro(fecha_base, fecha_ultima_clase)
+        periodo_pago_unico = (
+            fecha_base,
+            fecha_ultima_clase or fecha_base + timedelta(days=40),
+        )
+
         fechas_auto = {
             "matricula": formatear_fecha_calendario(fecha_base),
-            "primer_pago": formatear_rango_fechas(
-                fecha_base,
-                fecha_base + timedelta(days=13),
+            "primer_pago": (
+                formatear_rango_fechas(*periodo_pago_unico)
+                if pago_unico
+                else formatear_rango_fechas(*periodos_pago[0])
             ),
-            "segundo_pago": formatear_rango_fechas(
-                fecha_base + timedelta(days=14),
-                fecha_base + timedelta(days=28),
+            "segundo_pago": (
+                "No aplica"
+                if pago_unico
+                else formatear_rango_fechas(*periodos_pago[1])
             ),
-            "tercer_pago": formatear_rango_fechas(
-                fecha_base + timedelta(days=29),
-                fecha_base + timedelta(days=40),
+            "tercer_pago": (
+                "No aplica"
+                if pago_unico
+                else formatear_rango_fechas(*periodos_pago[2])
             ),
             "retiro_inclusion": formatear_rango_fechas(
-                fecha_base + timedelta(days=5),
-                fecha_base + timedelta(days=11),
+                *periodos_retiro["retiro_inclusion"]
             ),
             "retiro_fuera": formatear_rango_fechas(
-                fecha_base + timedelta(days=12),
-                fecha_base + timedelta(days=38),
+                *periodos_retiro["retiro_fuera"]
             ),
         }
 
     return {
+        "pago_unico": pago_unico,
         "matricula": organizacion.fecha_matricula_texto or fechas_auto["matricula"],
         "primer_pago": organizacion.primer_pago_texto or fechas_auto["primer_pago"],
         "segundo_pago": organizacion.segundo_pago_texto or fechas_auto["segundo_pago"],
@@ -763,6 +967,7 @@ def contexto_calendario_pago(organizacion, cuotas=1):
         "horario": organizacion.horario or "Por definir",
 
         "matricula": fechas_pago["matricula"],
+        "pago_unico": fechas_pago["pago_unico"],
         "primer_pago": fechas_pago["primer_pago"],
         "segundo_pago": fechas_pago["segundo_pago"],
         "tercer_pago": fechas_pago["tercer_pago"],
@@ -1024,9 +1229,15 @@ def generar_docx_calendario_pago(organizacion, cuotas=1):
         align=WD_ALIGN_PARAGRAPH.LEFT,
     )
 
+    primer_pago_label = (
+        "• Pago único de la matrícula"
+        if context["pago_unico"]
+        else "• Pago total con descuento del 5% o Primer\n  Tercio de la Matrícula"
+    )
+
     set_cell_text(
         tabla_pago.rows[3].cells[0],
-        "• Pago total con descuento del 5% o Primer\n  Tercio de la Matrícula",
+        primer_pago_label,
         bold=False,
     )
     set_cell_text(tabla_pago.rows[3].cells[1], context["primer_pago"])

@@ -227,6 +227,22 @@ class OrganizacionDocente(ModeloBase):
         ("C3", "III Cuatrimestre"),
     ]
 
+    TIPO_POSICION_CHOICES = [
+        ("16", "Posición de 16 horas - B/. 640.00"),
+        ("32", "Posición de 32 horas - B/. 1,280.00"),
+        ("48", "Posición de 48 horas - B/. 1,920.00"),
+        ("64", "Posición de 64 horas - B/. 2,560.00"),
+    ]
+
+    COSTO_CREDITO = Decimal("80.00")
+    TARIFA_HORA_DOCENTE = Decimal("40.00")
+    MONTO_DECIMAL = Decimal("0.01")
+
+    ORIGEN_POSICION_CHOICES = [
+        ("SOLICITADA", "Posición solicitada"),
+        ("REASIGNADA", "Posición reasignada"),
+    ]
+
     ESTADO_INFORME_PROGRAMA_CHOICES = [
         ("", "No incluir en informe"),
         ("CONTINUA", "Programa que continúa"),
@@ -506,6 +522,77 @@ class OrganizacionDocente(ModeloBase):
         help_text="Ejemplo: ACTIVO, CULMINÓ, ACTIVO AL 2026",
     )
 
+
+
+
+
+    # ========================================================
+    # Campos para reporte de posiciones a utilizar
+    # ========================================================
+
+    incluir_en_reporte_posiciones = models.BooleanField(
+        "Incluir en reporte de posiciones",
+        default=False,
+        help_text="Marca esta opción si esta organización docente debe aparecer en el reporte de posiciones.",
+    )
+
+    tipo_posicion = models.CharField(
+        "Tipo de posición",
+        max_length=10,
+        choices=TIPO_POSICION_CHOICES,
+        blank=True,
+        help_text="Ejemplo: posición de 16, 32, 48 o 64 horas.",
+    )
+
+    origen_posicion = models.CharField(
+        "Origen de la posición",
+        max_length=20,
+        choices=ORIGEN_POSICION_CHOICES,
+        blank=True,
+        default="SOLICITADA",
+        help_text="Indica si la posición fue solicitada o reasignada.",
+    )
+
+    cantidad_posiciones_asignadas = models.PositiveIntegerField(
+        "Cantidad de posiciones asignadas",
+        default=1,
+        help_text="Cantidad total de posiciones asignadas para esta organización.",
+    )
+
+    cantidad_posiciones_a_utilizar = models.PositiveIntegerField(
+        "Cantidad de posiciones a utilizar",
+        default=1,
+        help_text="Cantidad de posiciones que realmente se utilizarán.",
+    )
+
+    monto_unitario_posicion = models.DecimalField(
+        "Monto unitario de la posición",
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Si se deja vacío, el sistema calcula el monto según el tipo de posición.",
+    )
+
+    posicion_programa_nuevo = models.BooleanField(
+        "Posición de programa nuevo",
+        default=False,
+        help_text="Marca esta opción si la posición corresponde a un programa nuevo. En el reporte aparecerá con **.",
+    )
+
+    observacion_posicion = models.CharField(
+        "Observación de posición",
+        max_length=255,
+        blank=True,
+        help_text="Observación opcional para el reporte de posiciones.",
+    )
+
+
+
+
+
+
+
     observaciones = models.TextField(
         blank=True,
         null=True,
@@ -555,6 +642,71 @@ class OrganizacionDocente(ModeloBase):
     @property
     def observacion_reporte(self):
         return self.observacion_informe_programa or "ACTIVO"
+    
+
+
+    @property
+    def monto_base_posicion(self):
+        valores = {
+            "16": 640,
+            "32": 1280,
+            "48": 1920,
+            "64": 2560,
+        }
+
+        if self.monto_unitario_posicion is not None:
+            return self.monto_unitario_posicion
+
+        return valores.get(self.tipo_posicion, 0)
+
+    @property
+    def total_posiciones_asignadas_monto(self):
+        return self.cantidad_posiciones_asignadas * self.monto_base_posicion
+
+    @property
+    def total_posiciones_utilizar_monto(self):
+        return self.cantidad_posiciones_a_utilizar * self.monto_base_posicion
+
+    def estudiantes_equivalentes_pago(self):
+        total_no_exonerados = Decimal(self.total_no_exonerados or 0)
+        exonerados_50 = Decimal(self.cantidad_exoneracion_50 or 0) * Decimal("0.50")
+        exonerados_25 = Decimal(self.cantidad_exoneracion_25 or 0) * Decimal("0.75")
+
+        total_equivalente = total_no_exonerados + exonerados_50 + exonerados_25
+
+        if total_equivalente:
+            return total_equivalente
+
+        return Decimal(self.cantidad_estudiantes_matriculados or 0)
+
+    def redondear_monto(self, valor):
+        return Decimal(valor or Decimal("0.00")).quantize(self.MONTO_DECIMAL)
+
+    def calcular_total_ingresos(self):
+        total_creditos = self.total_creditos or Decimal("0.00")
+        total = total_creditos * self.COSTO_CREDITO * self.estudiantes_equivalentes_pago()
+        return self.redondear_monto(total)
+
+    def calcular_pago_docente(self):
+        monto_posicion = self.monto_base_posicion or Decimal("0.00")
+
+        if monto_posicion:
+            cantidad_posiciones = self.cantidad_posiciones_a_utilizar or 1
+            total = Decimal(cantidad_posiciones) * Decimal(monto_posicion)
+            return self.redondear_monto(total)
+
+        total_horas = self.total_horas or Decimal("0.00")
+        total = total_horas * self.TARIFA_HORA_DOCENTE
+        return self.redondear_monto(total)
+
+    @property
+    def facultad_reporte_posicion(self):
+        nombre = self.facultad.siglas or self.facultad.nombre
+
+        if self.posicion_programa_nuevo:
+            return f"{nombre}**"
+
+        return nombre
 
 
     
@@ -611,6 +763,8 @@ class OrganizacionDocente(ModeloBase):
             if not self.total_laboratorio:
                 self.total_laboratorio = self.asignatura.total_laboratorio
 
+        self.total_ingresos = self.calcular_total_ingresos()
+        self.pago_docente = self.calcular_pago_docente()
         self.utilidad_neta = self.calcular_utilidad_neta()
 
         self.full_clean()
@@ -625,7 +779,7 @@ class OrganizacionDocente(ModeloBase):
 
         total_ingresos = self.total_ingresos or Decimal("0.00")
         pago_docente = self.pago_docente or Decimal("0.00")
-        return total_ingresos - pago_docente
+        return self.redondear_monto(total_ingresos - pago_docente)
 
     def crear_estados_iniciales(self):
         """

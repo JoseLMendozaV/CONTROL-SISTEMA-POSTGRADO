@@ -450,6 +450,17 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "inicio_texto_programa",
             "finaliza_texto_programa",
             "observacion_informe_programa",
+
+
+            # Reporte de posiciones
+            "incluir_en_reporte_posiciones",
+            "tipo_posicion",
+            "origen_posicion",
+            "cantidad_posiciones_asignadas",
+            "cantidad_posiciones_a_utilizar",
+            "monto_unitario_posicion",
+            "posicion_programa_nuevo",
+            "observacion_posicion",
         ]
 
         labels = {
@@ -493,6 +504,15 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "inicio_texto_programa": "Inicio texto",
             "finaliza_texto_programa": "Finaliza texto",
             "observacion_informe_programa": "Observación del informe",
+
+            "incluir_en_reporte_posiciones": "Incluir en reporte de posiciones",
+            "tipo_posicion": "Tipo de posición",
+            "origen_posicion": "Origen de la posición",
+            "cantidad_posiciones_asignadas": "Cantidad de posiciones asignadas",
+            "cantidad_posiciones_a_utilizar": "Cantidad de posiciones a utilizar",
+            "monto_unitario_posicion": "Monto unitario de la posición",
+            "posicion_programa_nuevo": "Posición de programa nuevo",
+            "observacion_posicion": "Observación de posición",
         }
 
         widgets = {
@@ -637,6 +657,13 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
                     "placeholder": "Ejemplo: ACTIVO, CULMINÓ, ACTIVO AL 2026"
                 }
             ),
+            
+
+            "observacion_posicion": forms.TextInput(
+                attrs={
+                    "placeholder": "Ejemplo: programa nuevo, posición reasignada, pendiente de aprobación"
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -662,6 +689,8 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         )
 
         self.fields["fecha_matricula"].input_formats = ["%Y-%m-%d"]
+        self.fields["total_ingresos"].disabled = True
+        self.fields["pago_docente"].disabled = True
 
         instance = getattr(self, "instance", None)
 
@@ -714,6 +743,23 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
 
         incluir_en_informe = cleaned_data.get("incluir_en_informe_programas")
         estado_informe = cleaned_data.get("estado_informe_programa")
+
+        incluir_posiciones = cleaned_data.get("incluir_en_reporte_posiciones")
+        tipo_posicion = cleaned_data.get("tipo_posicion")
+        cantidad_asignadas = cleaned_data.get("cantidad_posiciones_asignadas") or 0
+        cantidad_utilizar = cleaned_data.get("cantidad_posiciones_a_utilizar") or 0
+
+        if incluir_posiciones and not tipo_posicion:
+            self.add_error(
+                "tipo_posicion",
+                "Debes seleccionar el tipo de posición."
+            )
+
+        if incluir_posiciones and cantidad_utilizar > cantidad_asignadas:
+            self.add_error(
+                "cantidad_posiciones_a_utilizar",
+                "Las posiciones a utilizar no pueden ser mayores que las posiciones asignadas."
+            )
 
         if incluir_en_informe and not estado_informe:
             self.add_error(
@@ -1198,6 +1244,54 @@ class InformeProgramasFiltroForm(TailwindFormMixin, forms.Form):
             ("T2", "II Trimestre"),
             ("T3", "III Trimestre"),
             ("T4", "IV Trimestre"),
+            ("ESPECIAL", "Periodo Especial"),
+        ],
+    )
+
+    facultad = forms.ModelChoiceField(
+        label="Facultad",
+        required=False,
+        queryset=Facultad.objects.none(),
+        empty_label="Todas las facultades",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["facultad"].queryset = Facultad.objects.filter(
+            activo=True
+        ).order_by("nombre")
+
+        self.aplicar_estilos_tailwind()
+
+
+
+class ReportePosicionesFiltroForm(TailwindFormMixin, forms.Form):
+    anio = forms.IntegerField(
+        label="Año del reporte",
+        required=True,
+        widget=forms.NumberInput(
+            attrs={
+                "placeholder": "Ejemplo: 2026"
+            }
+        ),
+    )
+
+    periodo = forms.ChoiceField(
+        label="Periodo",
+        required=False,
+        choices=[
+            ("", "Todo el año"),
+            ("VERANO", "Verano"),
+            ("I", "I Semestre"),
+            ("II", "II Semestre"),
+            ("T1", "I Trimestre"),
+            ("T2", "II Trimestre"),
+            ("T3", "III Trimestre"),
+            ("T4", "IV Trimestre"),
+            ("C1", "I Cuatrimestre"),
+            ("C2", "II Cuatrimestre"),
+            ("C3", "III Cuatrimestre"),
             ("ESPECIAL", "Periodo Especial"),
         ],
     )
