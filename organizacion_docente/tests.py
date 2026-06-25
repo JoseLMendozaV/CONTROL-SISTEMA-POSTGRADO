@@ -2,10 +2,10 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 
 from .documents import calcular_fechas_calendario_estudiantes, texto_periodo_academico
-from .models import Docente, OrganizacionDocente
+from .models import Asignatura, Docente, Facultad, OrganizacionDocente, ProgramaPostgrado
 
 
 class CalendarioPagoEstudiantesTests(SimpleTestCase):
@@ -119,6 +119,48 @@ class FinanzasOrganizacionDocenteTests(SimpleTestCase):
             organizacion.cedula_docente_display,
             "-",
         )
+
+
+class CodigoHorarioOrganizacionDocenteTests(TestCase):
+    def setUp(self):
+        self.facultad = Facultad.objects.create(
+            nombre="Facultad de Ingeniería",
+            siglas="FI",
+        )
+        self.programa = ProgramaPostgrado.objects.create(
+            facultad=self.facultad,
+            nombre="Maestría en Sistemas",
+        )
+        self.asignatura = Asignatura.objects.create(
+            programa=self.programa,
+            nombre="Arquitectura de Software",
+            codigo_asignatura="ASW-101",
+            codigo_horario="HOR-ASIG",
+            total_horas=Decimal("40.00"),
+            total_creditos=Decimal("3.00"),
+        )
+
+    def organizacion(self, **overrides):
+        datos = {
+            "anio": 2026,
+            "semestre": "I",
+            "facultad": self.facultad,
+            "programa": self.programa,
+            "grupo_aula": "1MS101",
+            "asignatura": self.asignatura,
+        }
+        datos.update(overrides)
+        return OrganizacionDocente.objects.create(**datos)
+
+    def test_respeta_codigo_horario_escrito_en_organizacion(self):
+        organizacion = self.organizacion(codigo_horario="HOR-MANUAL")
+
+        self.assertEqual(organizacion.codigo_horario, "HOR-MANUAL")
+
+    def test_usa_codigo_horario_de_asignatura_si_organizacion_esta_vacio(self):
+        organizacion = self.organizacion()
+
+        self.assertEqual(organizacion.codigo_horario, "HOR-ASIG")
 
 
 class TratamientoDocenteTests(SimpleTestCase):

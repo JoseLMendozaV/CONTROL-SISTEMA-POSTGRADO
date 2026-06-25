@@ -813,7 +813,9 @@ class OrganizacionDocente(ModeloBase):
 
         if self.asignatura:
             self.codigo_asignatura = self.asignatura.codigo_asignatura
-            self.codigo_horario = self.asignatura.codigo_horario
+
+            if not self.codigo_horario:
+                self.codigo_horario = self.asignatura.codigo_horario
 
             if not self.total_horas:
                 self.total_horas = self.asignatura.total_horas

@@ -377,12 +377,6 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         disabled=True,
     )
 
-    codigo_horario_display = forms.CharField(
-        label="Código de horario",
-        required=False,
-        disabled=True,
-    )
-
     utilidad_neta_display = forms.CharField(
         label="Utilidad neta",
         required=False,
@@ -410,7 +404,7 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             # Información académica
             "asignatura",
             "codigo_asignatura_display",
-            "codigo_horario_display",
+            "codigo_horario",
             "grupo_aula",
             "total_horas",
             "fechas_clases",
@@ -476,6 +470,7 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "activo": "Activo",
             "docente": "Docente",
             "asignatura": "Asignatura",
+            "codigo_horario": "Código de horario",
             "grupo_aula": "Grupo / Aula",
             "total_horas": "Total de horas",
             "fechas_clases": "Fechas de clases",
@@ -535,6 +530,11 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
             "grupo_aula": forms.TextInput(
                 attrs={
                     "placeholder": "Ejemplo: 2IL104"
+                }
+            ),
+            "codigo_horario": forms.TextInput(
+                attrs={
+                    "placeholder": "Código de horario, si aplica"
                 }
             ),
             "total_horas": forms.NumberInput(
@@ -703,12 +703,10 @@ class OrganizacionDocenteForm(TailwindFormMixin, forms.ModelForm):
         if instance and instance.pk:
             self.fields["cedula_docente_display"].initial = instance.cedula_docente_display
             self.fields["codigo_asignatura_display"].initial = instance.codigo_asignatura or ""
-            self.fields["codigo_horario_display"].initial = instance.codigo_horario or ""
             self.fields["utilidad_neta_display"].initial = f"B/. {instance.utilidad_neta:,.2f}"
         else:
             self.fields["cedula_docente_display"].initial = "Se completará al guardar"
             self.fields["codigo_asignatura_display"].initial = "Se completará al guardar"
-            self.fields["codigo_horario_display"].initial = "Se completará al guardar"
             self.fields["utilidad_neta_display"].initial = "Se calculará al guardar"
 
         self.aplicar_estilos_tailwind()

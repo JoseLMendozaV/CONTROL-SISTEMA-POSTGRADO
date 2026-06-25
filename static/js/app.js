@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const cedulaDocenteDisplay = document.getElementById("id_cedula_docente_display");
     const codigoAsignaturaDisplay = document.getElementById("id_codigo_asignatura_display");
-    const codigoHorarioDisplay = document.getElementById("id_codigo_horario_display");
+    const codigoHorarioInput = document.getElementById("id_codigo_horario");
 
     const totalHorasInput = document.getElementById("id_total_horas");
     const totalCreditosInput = document.getElementById("id_total_creditos");
@@ -217,8 +217,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 codigoAsignaturaDisplay.value = data.codigo_asignatura || "";
             }
 
-            if (codigoHorarioDisplay) {
-                codigoHorarioDisplay.value = data.codigo_horario || "";
+            if (codigoHorarioInput) {
+                codigoHorarioInput.value = data.codigo_horario || "";
             }
 
             if (totalHorasInput && data.total_horas) {
