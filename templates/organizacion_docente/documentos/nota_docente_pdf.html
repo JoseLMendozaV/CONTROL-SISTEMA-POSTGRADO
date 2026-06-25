@@ -59,11 +59,18 @@
         }
 
         .firma {
-            margin-top: 36px;
+            margin-top: 10px;
         }
 
         .firma p {
             margin: 1px 0;
+        }
+
+        .firma-img {
+            display: block;
+            width: 150px;
+            height: auto;
+            margin: 4px 0 2px 0;
         }
 
         .adjuntos {
@@ -168,6 +175,9 @@
     <p>Atentamente,</p>
 
     <div class="firma">
+        {% if usar_firma_imagen %}
+            <img src="{{ firma_imagen_url }}" class="firma-img">
+        {% endif %}
         <p><strong>{{ coordinador_postgrado }}</strong></p>
         <p>Coordinador de Postgrado</p>
         <p>Centro Regional de Chiriquí</p>

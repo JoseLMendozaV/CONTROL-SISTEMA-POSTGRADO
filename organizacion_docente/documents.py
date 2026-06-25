@@ -188,6 +188,18 @@ def agregar_encabezado_utp_docx(documento):
         )
 
 
+def agregar_firma_coordinador_docx(documento):
+    firma = finders.find("img/firma.png")
+
+    if not firma:
+        return
+
+    parrafo = documento.add_paragraph()
+    run = parrafo.add_run()
+    run.add_picture(firma, width=Inches(1.7))
+    parrafo.paragraph_format.space_after = Pt(0)
+
+
 
 def obtener_uri_static(nombre_archivo):
     ruta = finders.find(nombre_archivo)
@@ -208,6 +220,7 @@ def contexto_nota_docente(organizacion):
 
     fecha_actual = timezone.localtime(timezone.now())
     encabezado_imagen_url = obtener_uri_static("img/encabezado_utp_chiriqui.png")
+    firma_imagen_url = obtener_uri_static("img/firma.png")
 
     nombre_docente = organizacion.docente.nombre_completo
     cedula_docente = organizacion.cedula_docente or organizacion.docente.cedula
@@ -275,6 +288,8 @@ def contexto_nota_docente(organizacion):
 
         "encabezado_imagen_url": encabezado_imagen_url,
         "usar_encabezado_imagen": bool(encabezado_imagen_url),
+        "firma_imagen_url": firma_imagen_url,
+        "usar_firma_imagen": bool(firma_imagen_url),
     }
 
 
@@ -486,7 +501,8 @@ def generar_docx_nota_docente(organizacion):
         space_after=22,
     )
 
-    agregar_parrafo_nota(documento, [("Atentamente,", False)], space_after=38)
+    agregar_parrafo_nota(documento, [("Atentamente,", False)], space_after=0)
+    agregar_firma_coordinador_docx(documento)
 
     agregar_parrafo_nota(
         documento,
