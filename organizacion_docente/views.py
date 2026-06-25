@@ -623,9 +623,9 @@ def organizacion_detalle(request, pk):
     # se vuelven a crear.
     organizacion.crear_estados_iniciales()
 
-    estados = organizacion.estados.select_related(
-        "usuario_completo"
-    ).order_by("id")
+    estados = EstadoProcesoOrganizacion.ordenar_por_flujo(
+        organizacion.estados.select_related("usuario_completo")
+    )
 
     context = {
         "titulo": "Detalle de Organización Docente",
@@ -697,6 +697,9 @@ def organizacion_editar(request, pk):
     )
 
     organizacion.crear_estados_iniciales()
+    estados_queryset = EstadoProcesoOrganizacion.ordenar_por_flujo(
+        organizacion.estados.all()
+    )
 
     if request.method == "POST":
         form = OrganizacionDocenteForm(
@@ -707,6 +710,7 @@ def organizacion_editar(request, pk):
         formset = EstadoProcesoOrganizacionFormSet(
             request.POST,
             instance=organizacion,
+            queryset=estados_queryset,
         )
 
         if form.is_valid() and formset.is_valid():
@@ -729,7 +733,10 @@ def organizacion_editar(request, pk):
             )
     else:
         form = OrganizacionDocenteForm(instance=organizacion)
-        formset = EstadoProcesoOrganizacionFormSet(instance=organizacion)
+        formset = EstadoProcesoOrganizacionFormSet(
+            instance=organizacion,
+            queryset=estados_queryset,
+        )
 
     context = {
         "titulo": "Editar Organización Docente",

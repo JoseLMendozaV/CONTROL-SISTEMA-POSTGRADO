@@ -91,6 +91,7 @@ def crear_hoja_organizaciones(wb, organizaciones):
         "No. PAG.",
         "DOCENTE",
         "CEDULA",
+        "NOTA DOCENTE ENVIADA AL DOCENTE",
         "HORARIO ELABORADO",
         "ORG. DOC ELABORADA",
         "CALENDARIO DE PAGO ELABORADO Y ENVIADO",
@@ -134,6 +135,7 @@ def crear_hoja_organizaciones(wb, organizaciones):
         aplicar_estilo_titulo(cell)
 
     estados_exportar = [
+        "nota_docente_enviada_docente",
         "horario_elaborado",
         "organizacion_docente_elaborada",
         "calendario_pago_elaborado_enviado",

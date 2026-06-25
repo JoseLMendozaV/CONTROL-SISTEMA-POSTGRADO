@@ -954,6 +954,7 @@ class EstadoProcesoOrganizacion(ModeloBase):
     """
 
     TIPO_ESTADO_CHOICES = [
+        ("nota_docente_enviada_docente", "Nota docente enviada al docente"),
         ("horario_elaborado", "Horario elaborado"),
         ("organizacion_docente_elaborada", "Organización docente elaborada"),
         ("calendario_pago_elaborado_enviado", "Calendario de pago elaborado y enviado"),
@@ -1019,6 +1020,24 @@ class EstadoProcesoOrganizacion(ModeloBase):
     def __str__(self):
         estado = "Completado" if self.completado else "Pendiente"
         return f"{self.get_tipo_estado_display()} - {estado}"
+
+    @classmethod
+    def ordenar_por_flujo(cls, queryset):
+        orden = models.Case(
+            *[
+                models.When(
+                    tipo_estado=codigo,
+                    then=models.Value(posicion),
+                )
+                for posicion, (codigo, _nombre) in enumerate(cls.TIPO_ESTADO_CHOICES)
+            ],
+            default=models.Value(len(cls.TIPO_ESTADO_CHOICES)),
+            output_field=models.IntegerField(),
+        )
+
+        return queryset.annotate(
+            orden_flujo=orden,
+        ).order_by("orden_flujo", "id")
 
     def marcar_completado(self, usuario=None, observacion=None):
         """
